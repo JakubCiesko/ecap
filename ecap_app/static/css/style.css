@@ -275,3 +275,7 @@
     background: var(--dark);
     border-color: var(--primary);
 }
+
+.table-responsive {
+    max-height:300px;
+}

@@ -16,19 +16,49 @@ async function getDataFromUrl(url){
         return null; 
     }
 }
-
-async function getUserExpenses(){
-    return getDataFromUrl("/get_user_expenses")
+async function extractDateAmount(url){
+    let data = {"date": [], "amount": []};
+    await getDataFromUrl(url)
+    .then(urlData => {
+        if (urlData && Object.keys(urlData)[0] != "error"){
+            data.date = Object.values(urlData.date);
+            data.amount = Object.values(urlData.amount);
+        }
+    });
+    return data
 }
 
-async function getUserIncomes(){
-    return getDataFromUrl("/get_user_incomes")
-}
-
+async function getUserExpenses(){return extractDateAmount("/get_user_expenses")}
+async function getUserIncomes(){return extractDateAmount("/get_user_incomes")}
+async function getExpectedExpenses(){return extractDateAmount("/get_user_expected_expenses");}
+async function getExpectedIncome(){return extractDateAmount("/get_user_expected_incomes")}
 async function getUserTotalIncome(){return getDataFromUrl("/get_user_total_income");}
 async function getUserTotalExpense(){return getDataFromUrl("/get_user_total_expense");}
 async function getUserTotalBalance(){return getDataFromUrl("/get_user_total_balance");}
 async function getUserSavingGoal(){return getDataFromUrl("/get_user_savings");}
+
+/*
+function renderSavingGoals(savingGoals) {
+    const carouselInner = document.getElementById('carouselInner');
+    let index = 0;
+    savingGoals.forEach(savingGoal => {
+        const isActive = index === 0 ? 'active' : '';
+        index++;
+        const carouselItem = document.createElement('div');
+        carouselItem.classList.add('carousel-item', isActive);
+        carouselItem.innerHTML = `
+            <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                <object data="/static/img/savings-hog.svg" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                <div class="ms-3">
+                    <p class="mb-2">${savingGoal.current}</p>
+                    <h6 class="mb-0">${savingGoal.target}€</h6>
+                </div>
+            </div>
+        `;
+        carouselInner.appendChild(carouselItem);
+    });
+}*/
+
 
 async function updateValues (){
     try {
@@ -38,8 +68,8 @@ async function updateValues (){
         document.getElementById("income").textContent = income.user_income;
         document.getElementById("expense").textContent = expense.user_expense;
         document.getElementById("balance").textContent = balance.user_balance;
-        if (savings.user_savings.current.length){
-            document.getElementById("savings").textContent = savings.user_savings.current[0] + "/" + savings.user_savings.goal[0];
+        if (savings.saving_goals.length){
+            document.getElementById("savings").textContent = savings.saving_goals[0].current + "/" + savings.saving_goals[0].target;
         }
     } catch (error) {
         console.error("Error updating values: ", error);
@@ -47,166 +77,6 @@ async function updateValues (){
 }
 updateValues();
 
-
-
-function createChartConfig(dates, amounts, label){
-    const pointColors = Array(amounts.length).fill("rgba(75, 192, 192, 1)");
-    const borderColors = Array(amounts.length).fill("rgba(75, 192, 192, 1)");
-    return {
-        type: "line",
-        data: {
-            labels: dates,
-            datasets: [{
-                label: label,
-                data: amounts,
-                backgroundColor: "rgba(75, 192, 192, 0.2)",
-                borderColor: borderColors,
-                borderWidth: 1,
-                pointBackgroundColor: pointColors
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'day',
-                        tooltipFormat: "yyyy-mm-dd"
-                    },
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    }
-                    
-                },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Amount (€)'
-                    }
-                }
-            },
-            tooltips: {
-                mode: 'index',
-                intersect: false
-             },
-             hover: {
-                mode: 'index',
-                intersect: false
-             }
-        }
-    };
-}
-
-
-async function get_expected_expenses(){return getDataFromUrl("/get_user_expected_expenses");}
-async function get_expected_income(){return getDataFromUrl("/get_user_expected_incomes");}
-
-async function addExpectedDataToChart(dataFetchFunction, chart, label){
-    try {
-        dataFetchFunction().then(
-            data => {if (data) {
-                    data = data[Object.keys(data)[0]]; 
-                    let dates = data.dates; 
-                    let amounts = data.amount; 
-                    let color = "#BB436C";
-                    for (let index = 0; index <= amounts.length; index++) {
-                        let last_label_index = Object.keys(chart.data.labels).length;
-                        chart.data.labels[last_label_index] = dates[index];
-                        chart.data.datasets[0].data.push(amounts[index]);
-                        chart.data.datasets[0].pointBackgroundColor.push(color);
-                        chart.data.datasets[0].borderColor.push(color);
-                    }
-                    chart.data.datasets.push({
-                        label: label,
-                        backgroundColor: "#BB436C",
-                    })
-                    chart.update();
-                    return true;
-                }
-                
-            }
-        )
-    } catch (error) {
-        console.error("Error adding data to chart: ", error);
-    }
-}
-
-let userExpensesChart, userIncomesChart;
-getUserExpenses().then(data => {
-    if (data) {
-        data = data.user_expenses;
-        const dates = data.date;
-        const amounts = Object.values(data.amount);
-        let ctx1 = $("#expensesChart").get(0).getContext("2d");
-        userExpensesChart = new Chart(ctx1, createChartConfig(dates, amounts, "Expense"));
-    }
-});
-getUserIncomes().then(data => {
-    if (data) {
-        data = data.user_incomes;
-        const dates = data.date;
-        const amounts = Object.values(data.amount);
-        let ctx2 = $("#incomesChart").get(0).getContext("2d");
-        userIncomesChart = new Chart(ctx2, createChartConfig(dates, amounts, "Income"));
-    }
-});
-
-async function fetchUserExpensesAndCreateChart() {
-    try {
-        const expensesData = await getUserExpenses();
-        if (expensesData && expensesData.user_expenses) {
-            const dates = expensesData.user_expenses.date;
-            const amounts = Object.values(expensesData.user_expenses.amount);
-            const ctx1 = $("#expensesChart").get(0).getContext("2d");
-            if (userExpensesChart) {
-                userExpensesChart.destroy();
-            }
-
-            userExpensesChart = new Chart(ctx1, createChartConfig(dates, amounts, "Expense"));
-        }
-    } catch (error) {
-        console.error('Error fetching user expenses:', error);
-    }
-}
-
-async function fetchUserIncomesAndCreateChart() {
-    try {
-        const incomesData = await getUserIncomes();
-        if (incomesData && incomesData.user_incomes) {
-            const dates = incomesData.user_incomes.date;
-            const amounts = Object.values(incomesData.user_incomes.amount);
-            const ctx2 = $("#incomesChart").get(0).getContext("2d");
-            if (userIncomesChart) {
-                userIncomesChart.destroy();
-            }
-
-            userIncomesChart = new Chart(ctx2, createChartConfig(dates, amounts, "Income"));
-        }
-    } catch (error) {
-        console.error('Error fetching user incomes:', error);
-    }
-}
-
-async function addExpectedDataToCharts() {
-    try {
-        await fetchUserExpensesAndCreateChart();
-        await fetchUserIncomesAndCreateChart();
-
-        // After charts are created, add expected data after a slight delay
-        setTimeout(async function() {
-            await addExpectedDataToChart(get_expected_expenses, userExpensesChart, "Expected Expenses");
-            await addExpectedDataToChart(get_expected_income, userIncomesChart, "Expected Income");
-        }, 250);
-
-    } catch (error) {
-        console.error('Error processing data:', error);
-    }
-}
-
-addExpectedDataToCharts();
 
 async function generateReport() {
     const startDate = document.getElementById('startDate').value;
@@ -243,13 +113,13 @@ function displayUserReports(){
             if (reports) {
                 const reportTable = document.getElementById('reportTable');
                 if (reportTable.hasChildNodes())
-                    reportTable.childNodes.forEach(child=>reportTable.removeChild(child));
+                    reportTable.innerHTML = '';
                 reports.reverse().forEach(report => {
                     const startDateFormatted = formatDate(report.start_date);
                     const endDateFormatted = formatDate(report.end_date);
                     const row = document.createElement('tr');
                     const checkboxCell = document.createElement('td');
-                    checkboxCell.innerHTML = '<input class="form-check-input" type="checkbox">';
+                    checkboxCell.innerHTML = checkboxCell.innerHTML = '<input class="form-check-input" type="checkbox" name="selected_items" value="' + report.id + '">';
                     row.appendChild(checkboxCell);
                     const reportID = document.createElement('td');
                     reportID.textContent = report.id;
@@ -271,7 +141,7 @@ function displayUserReports(){
                     row.appendChild(balanceCell);
                     const printCell = document.createElement('td');
                     printCell.classList.add('text-center');
-                    printCell.innerHTML = "<a class=\"btn btn-sm btn-primary\" href=\"print_report/" + report.id + " \" target=\"_blank\">Print</a>";
+                    printCell.innerHTML = "<a class=\"btn btn-sm btn-primary\" href=\"report/" + report.id + " \" target=\"_blank\">Detail</a>";
                     row.appendChild(printCell);
                     reportTable.appendChild(row);
                 })
@@ -279,5 +149,51 @@ function displayUserReports(){
         } 
     )
 }
+
 displayUserReports();
+
 function createUserReport(startDate, endDate){return getDataFromUrl("create_user_report/" + startDate + "/" + endDate);}
+
+document.getElementById('selectAll').addEventListener('change', function() {
+    var checkboxes = document.querySelectorAll('input[name="selected_items"]');
+    for (var checkbox of checkboxes) {
+        checkbox.checked = this.checked;
+    }
+});
+
+
+document.getElementById('deleteSelected').addEventListener('click', function() {
+    const selectedItems = [];
+    const checkboxes = document.querySelectorAll('input[name="selected_items"]:checked');
+    checkboxes.forEach(checkbox => {
+        selectedItems.push(checkbox.value);
+    });
+
+    if (selectedItems.length > 0) {
+        fetch('/delete_selected_reports/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Make sure to include CSRF token
+            },
+            body: JSON.stringify({ 'selected_items': selectedItems })
+        })
+        .then(response => {
+            if (response.ok) {
+                selectedItems.forEach(id => {
+                    const row = document.querySelector(`input[value="${id}"]`).closest('tr');
+                    row.remove();
+                });
+            } else {
+                alert('Failed to delete selected reports.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the reports.');
+        });
+    } else {
+        alert('No reports selected for deletion.');
+    }
+});
+
