@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from sklearn.linear_model import LinearRegression
-from .models import Expense, Income, Report
+from .models import Expense, Income, Report, SavingGoal
 from django.contrib.auth.models import User
+from django.db.models import Max, Min, Avg
 from typing import List, Callable, Tuple
 
 
@@ -27,7 +28,7 @@ def parse_and_calculate_expenses(expenses: List[Expense]) -> float:
     :return: Total calculated expenses.
     """
     quantity = np.array([expense.amount for expense in expenses])
-    price = np.array([expense.product.price for expense in expenses])
+    price = np.array([1 for _ in expenses])#np.array([expense.product.price for expense in expenses])
     return calculate_expenses(quantity, price)
 
 def calculate_total_user_expenses(user: User) -> float:
@@ -158,9 +159,11 @@ def train_model(data: pd.DataFrame) -> LinearRegression:
     """
     X = data["date_ordinal"].values.reshape(-1,1)
     y = data["amount"].values
-    model = LinearRegression()
-    model.fit(X,y)
-    return model 
+    if len(X) > 1:
+        model = LinearRegression()
+        model.fit(X,y)
+        return model
+    return None
 
 def predict_future_data(model: LinearRegression, start_date: datetime.date, days_to_predict: int) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -174,7 +177,9 @@ def predict_future_data(model: LinearRegression, start_date: datetime.date, days
     future_dates = [start_date + timedelta(days=i) for i in range(days_to_predict)]
     future_dates_strings = [future_date.strftime('%Y-%m-%d') for future_date in future_dates]
     future_dates_ordinal = np.array([date.toordinal() for date in future_dates]).reshape(-1, 1)
-    return future_dates_strings, model.predict(future_dates_ordinal)
+    if model:
+        return future_dates_strings, model.predict(future_dates_ordinal)
+    return future_dates_strings, [0]*len(future_dates_strings)
 
 def extrapolate_data_from_date(data: pd.DataFrame, start_date: datetime.date, days_to_predict: int = 10) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -224,7 +229,10 @@ def get_user_expenses_by_date(user:User) -> pd.DataFrame:
     Returns:
     pd.DataFrame: A DataFrame containing the user's expenses with columns 'date' and 'amount'.
     """
-    return pd.DataFrame(list(Expense.objects.filter(user=user).values("date", "amount"))).sort_values(by="date", ascending=True, ignore_index=True)
+    try: 
+        return pd.DataFrame(list(Expense.objects.filter(user=user).values("date", "amount"))).sort_values(by="date", ascending=True, ignore_index=True)
+    except KeyError:
+        return pd.DataFrame([], columns=["date", "amount"])
 
 def get_user_incomes_by_date(user:User) -> pd.DataFrame:
     """
@@ -240,7 +248,10 @@ def get_user_incomes_by_date(user:User) -> pd.DataFrame:
     Returns:
     pd.DataFrame: A DataFrame containing the user's incomes with columns 'date' and 'amount'.
     """
-    return pd.DataFrame(list(Income.objects.filter(user=user).values("date", "amount"))).sort_values(by="date", ascending=True, ignore_index=True)
+    try: 
+        return pd.DataFrame(list(Income.objects.filter(user=user).values("date", "amount"))).sort_values(by="date", ascending=True, ignore_index=True)
+    except KeyError:
+        return pd.DataFrame([], columns=["date", "amount"])
 
 def extrapolate_user_expenses_from_date(user: User, start_date: datetime.date, days_to_predict: int = 10):
     """
@@ -353,4 +364,204 @@ def create_report_for_user(user: User, start_date: datetime.date, end_date: date
     report = Report(user=user, start_date=start_date, end_date=end_date)
     report.save()
     report.populate_expenses_and_incomes()
+    report.save()
     return report
+
+def get_categories(transfers) -> dict:
+    try: #TODO: REMOVE .product.price as it is no longer a possible attribute of any model
+        extract_data = lambda transfer: (transfer.category, transfer.amount * transfer.product.price)
+        transfers = pd.DataFrame([extract_data(transfer) for transfer in transfers], columns=["category", "amount"])
+    except AttributeError:
+        extract_data = lambda transfer: (transfer.category, float(transfer.amount))
+        transfers = transfers = pd.DataFrame([extract_data(transfer) for transfer in transfers], columns=["category", "amount"])
+    transfers_by_category = transfers.groupby(by="category").sum()
+    total_transfer = transfers["amount"].sum()
+    transfers_by_category["percentage"] = transfers_by_category / total_transfer
+    return transfers_by_category.to_dict()
+
+def get_user_expense_categories(user:User) -> dict:
+    expenses = Expense.objects.filter(user=user)
+    return get_categories(expenses)
+
+def get_user_income_categories(user: User) -> dict:
+    incomes = Income.objects.filter(user=user)
+    return get_categories(incomes)
+
+def get_saving_goal(user: User) -> dict: 
+    SavingGoal.objects.exists()
+    saving_goal = SavingGoal.objects.filter(user=user).first()
+    return {"current": saving_goal.current_amount, "goal": saving_goal.target_amount, "percentage": saving_goal.current_amount/saving_goal.target_amount}
+
+
+def get_aggregate_function_output(filtered_objects, *aggregate_function, attrb="amount") -> list:
+    """
+    Compute aggregate values of a field from filtered queryset using specified aggregate functions.
+
+    Args:
+    - filtered_objects (QuerySet): QuerySet containing filtered objects.
+    - *aggregate_function (functions): Variable-length argument list of aggregate functions (e.g., Min, Max, Avg).
+
+    Returns:
+    - list: A list containing computed aggregate values based on the aggregate functions provided.
+    """
+    return [filtered_objects.aggregate(agg_value=a_fn(attrb))["agg_value"] for a_fn in aggregate_function]
+
+def get_user_income_aggregates(user: User) -> dict: 
+    """
+    Retrieve minimum, maximum, and average income amounts for a given user.
+
+    Args:
+    - user (User): The user for whom income data is queried.
+
+    Returns:
+    - dict: A dictionary with keys 'min', 'max', and 'avg' representing minimum, maximum,
+      and average income amounts respectively. If no income data exists for the user,
+      returns {'min': 0, 'max': 0, 'avg': 0}.
+    """
+    aggregates = [Min, Max, Avg]
+    filtered_objects = Income.objects.filter(user=user)
+    today = datetime.now().strftime("%Y-%m-%d")
+    if filtered_objects.exists():
+        incomes_aggregates = get_aggregate_function_output(filtered_objects, *aggregates)
+        dates = [Income.objects.filter(user=user, amount=amount).values("date").first() for amount in incomes_aggregates]
+        dates = [date["date"].strftime("%Y-%m-%d") if date else today for date in dates]
+        return {
+            "min": (round(incomes_aggregates[0],3), dates[0]), 
+            "max": (round(incomes_aggregates[1],3), dates[1]), 
+            "avg": (round(incomes_aggregates[2],3), dates[2])
+        }
+    return {"min": (0, today), "max": (0, today), "avg": (0, today)}
+
+def get_user_expense_aggregates(user: User) -> dict: 
+    """
+    Retrieve minimum, maximum, and average expense amounts for a given user.
+
+    Args:
+    - user (User): The user for whom expense data is queried.
+
+    Returns:
+    - dict: A dictionary with keys 'min', 'max', and 'avg' representing minimum, maximum,
+      and average expense amounts respectively. If no expense data exists for the user,
+      returns {'min': 0, 'max': 0, 'avg': 0}.
+    """
+    aggregates = [Min, Max, Avg]
+    filtered_objects = Expense.objects.filter(user=user)
+    today = datetime.now().strftime("%Y-%m-%d")
+    if filtered_objects.exists():
+        expense_aggregates = get_aggregate_function_output(filtered_objects, *aggregates)
+        dates = [Expense.objects.filter(user=user, amount=amount).values("date").first() for amount in expense_aggregates]
+        dates = [date["date"].strftime("%Y-%m-%d") if date else datetime.now().strftime("%Y-%m-%d") for date in dates]
+        return {
+            "min":(round(expense_aggregates[0],3), dates[0]), 
+            "max":(round(expense_aggregates[1],3), dates[1]), 
+            "avg":(round(expense_aggregates[2],3), dates[2]),
+        }
+    return {"min": (0, today), "max": (0, today), "avg": (0, today)}
+
+def std(data: np.array) -> np.ndarray:
+    return np.std(data)
+
+def get_user_object_std(user: User, Object):
+    amounts = [obj.amount for obj in Object.objects.filter(user=user)]
+    if amounts: 
+        return std(amounts)
+    return 0
+
+def get_user_income_std(user: User) -> float:
+    return get_user_object_std(user, Income)
+
+def get_user_expense_std(user: User) -> float: 
+    return get_user_object_std(user, Expense)
+
+def get_model_slope(model: LinearRegression) -> float:
+    if model: 
+        return model.coef_[0]
+    return 0
+
+def get_expense_slope(user: User):
+    data = preprocess_date_data(get_user_expenses_by_date(user))
+    model = train_model(data)
+    return get_model_slope(model)
+
+def get_income_slope(user: User):
+    data = preprocess_date_data(get_user_incomes_by_date(user))
+    model = train_model(data)
+    return get_model_slope(model)
+
+
+def get_expense_context(request):
+    aggregates = get_user_expense_aggregates(request.user)
+    dates, amount = extrapolate_user_expenses(request.user)
+    user_expenses = get_user_expenses_by_date(request.user).to_dict()
+    chart_data = {"date": [date.strftime("%Y-%m-%d") for date in user_expenses["date"].values()], "amount": [float(amount) for amount in user_expenses["amount"].values()]}
+    projected_chart_data = {"date": list(dates), "amount": list(amount)}
+    categories = get_user_expense_categories(request.user)
+    data = {
+        "is_expense": True,
+        "min": aggregates["min"],
+        "max": aggregates["max"],
+        "avg": aggregates["avg"],
+        "total": calculate_total_user_expenses(request.user), 
+        "std": round(get_user_expense_std(request.user),3),
+        "linear_regression_slope": round(get_expense_slope(request.user),3),
+        "today": datetime.now().strftime("%Y-%m-%d"),
+        "chart_data": chart_data,
+        "projected_chart_data": projected_chart_data, 
+        "categories": categories,
+        "data": [{
+            "id": e.id, 
+            "date": e.date.strftime("%Y-%m-%d"), 
+            "amount": float(e.amount), 
+            "category": e.category, 
+            "description": e.description} 
+            for e in Expense.objects.filter(user=request.user)
+        ]
+    }
+    return {"datatitle": "Expense", "data": data, "active_menu": "expense"}
+
+def get_income_context(request):
+    aggregates = get_user_income_aggregates(request.user)
+    dates, amount = extrapolate_user_income(request.user)
+    user_expenses = get_user_incomes_by_date(request.user).to_dict()
+    chart_data = {"date": [date.strftime("%Y-%m-%d") for date in user_expenses["date"].values()], "amount": [float(amount) for amount in user_expenses["amount"].values()]}
+    projected_chart_data = {"date": list(dates), "amount": list(amount)}
+    categories = get_user_income_categories(request.user)
+    data = {
+        "is_expense": False,
+        "min": aggregates["min"],
+        "max": aggregates["max"],
+        "avg": aggregates["avg"],
+        "total": calculate_total_user_income(request.user), 
+        "std": round(get_user_income_std(request.user),3),
+        "linear_regression_slope": round(get_income_slope(request.user),3),
+        "today": datetime.now().strftime("%Y-%m-%d"),
+        "chart_data": chart_data,
+        "projected_chart_data": projected_chart_data, 
+        "categories": categories,
+        "data": [{
+            "id": i.id, 
+            "date": i.date.strftime("%Y-%m-%d"), 
+            "amount": float(i.amount), 
+            "category": i.category, 
+            "description": i.description} 
+            for i in Income.objects.filter(user=request.user)
+        ]
+    }
+    return {"datatitle": "Income", "data": data, "active_menu": "income"}
+
+def get_saving_goal_context(request):
+    return {
+    "data": [{
+            "id": sg.id,  
+            "name": sg.name, 
+            "target_amount": float(sg.target_amount), 
+            "current_amount": float(sg.current_amount), 
+            "target_date": sg.target_date.strftime("%Y-%m-%d"),
+            "remaining_days": sg.days_remaining,
+            "percentage": round(100*float(sg.current_amount)/float(sg.target_amount),3)} 
+            for sg in SavingGoal.objects.filter(user=request.user)
+        ],
+    "datatitle": "Saving Goals",
+    "active_menu": "saving_goals"
+    }
+    

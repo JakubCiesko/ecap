@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ECAP | {{datatitle}}{% endblock %}
+
+{% block content %}
+        {% include "sidebar.html" %} 
+        <div class="content">
+            {% include "navbar.html" %}
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <object data="{% static 'img/total.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <p class="mb-2">Total {{datatitle}}</p>
+                                <h6 class="mb-0"><span>{{data.total}}</span>€</h6>
+                                <p class="mb-2">({{data.today}})</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <object data="{% static 'img/avg.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <p class="mb-2">Average {{datatitle}}</p>
+                                <h6 class="mb-0"><span>{{data.avg.0}}</span>€</h6>
+                                <p class="mb-2">({{data.avg.1}})</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <object data="{% static 'img/min.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <p class="mb-2">Minimal {{datatitle}}</p>
+                                <h6 class="mb-0"><span>{{data.min.0}}</span>€</h6>
+                                <p class="mb-2">({{data.min.1}})</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <object data="{% static 'img/max.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <p class="mb-2">Maximal {{datatitle}}</p>
+                                <h6 class="mb-0"><span>{{data.max.0}}</span>€</h6>
+                                <p class="mb-2">({{data.max.1}})</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <object data="{% static 'img/std.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <p class="mb-2">{{datatitle}} Standard Deviation</p>
+                                <h6 class="mb-0"><span>{{data.std}}</span>€</h6>
+                                <p class="mb-2">({{data.today}})</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <object data="{% static 'img/linreg.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <p class="mb-2">{{datatitle}} Daily Growth</p>
+                                <h6 class="mb-0"><span>{{data.linear_regression_slope}}</span>€/day</h6>
+                                <p class="mb-2">({{data.today}})</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-12 col-xl-12">
+                        <div class="bg-light text-center rounded p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">{{datatitle}}</h6>
+                            </div>
+                            <canvas id="chart"></canvas>
+                        </div>
+                    </div>
+                
+                    <div class="col-sm-12 col-md-12 col-xl-12">
+                        <div class="bg-light text-center rounded p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">{{datatitle}} categories</h6>
+                            </div>
+                            <canvas id="doughnutChart" style="max-height:450px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                        <div class="bg-light p-4">
+                            <form method="post" action="{% if data.is_expense %}{% url 'delete_selected_expenses' %}{% else %}{% url 'delete_selected_incomes' %}{% endif %}">
+                                {% csrf_token %}
+                                <div class="table-responsive">
+                                    <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                        <thead>
+                                            <tr class="text-dark">
+                                                <th scope="col"><input class="form-check-input" type="checkbox" id="selectAll"></th>
+                                                <th scope="col">Expense ID</th>
+                                                <th scope="col">Date</th>
+                                                <th scope="col">Amount</th> 
+                                                <th scope="col">Description</th>
+                                                <th scope="col">Category</th>
+                                                <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="reportTable">
+                                            {% if data.data %}
+                                                {% for e in data.data %}
+                                                    <tr>
+                                                        <td><input class="form-check-input" type="checkbox" name="selected_items" value="{{ e.id }}"></td>
+                                                        <td>{{e.id}}</td>
+                                                        <td>{{e.date}}</td>
+                                                        <td>{{e.amount}}</td>
+                                                        <td>{{e.description}}</td>
+                                                        <td>{{e.category}}</td>
+                                                        <td><a class="btn btn-sm btn-primary" href="" target="_blank">Modify</a></td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button type="submit" class="btn btn-danger mt-3">Delete Selected</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-light rounded  p-4">
+                    <div class="row g-4">
+                        <div class="col-sm-12 col-md-12 col-xl-12">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-floating mb-4">
+                                    <input type="date" name="date" class="form-control" aria-invalid="true" id="id_date" required>
+                                    <label for="floatingInput">Date</label>
+                                </div>
+                                <div class="form-floating mb-4">
+                                    <input type="number" class="form-control" id="floatingInput" name="amount" placeholder="Amount" required>
+                                    <label for="floatingInput">Amount</label>
+                                </div>
+                                <div class="form-floating mb-4">
+                                    <input type="text" class="form-control" id="floatingInput" name="category" placeholder="Category" required>
+                                    <label for="floatingInput">Category</label>
+                                </div>
+                                <div class="form-floating mb-4">
+                                    <input type="text" class="form-control" id="floatingInput" name="description" placeholder="Description">
+                                    <label for="floatingInput">Description</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Add {{datatitle}}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include "footer.html" %}
+            
+        </div>
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+{% block extraJs %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    var projectedData = {{ data.projected_chart_data|safe }};
+    var data = {{data.chart_data|safe}};
+    var dates2 = projectedData.date;
+    var amounts2 = projectedData.amount;
+    var dates1 = data.date;
+    var amounts1 = data.amount;
+    var ctx = document.getElementById('chart').getContext('2d');
+    var projectedChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates1.concat(dates2),
+            datasets: [
+                {
+                    label: "{{datatitle}}",
+                    data: dates1.map((date, index) => ({ x: date, y: amounts1[index] })),
+                    backgroundColor: "rgba(75, 192, 192, 0.2)",
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    borderWidth: 1,
+                    pointBackgroundColor: "rgba(75, 192, 192, 1)",
+                    fill: false 
+                },
+                {
+                    label: "Expected " + "{{datatitle}}",
+                    data: dates2.map((date, index) => ({ x: date, y: amounts2[index] })),
+                    backgroundColor: "#BB436C",
+                    borderColor: "#BB436C",
+                    borderWidth: 1,
+                    pointBackgroundColor: "#BB436C",
+                    fill: false 
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        tooltipFormat: "DD-MM-YYYY"
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount (€)'
+                    }
+                }
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false
+            },
+            hover: {
+                mode: 'index',
+                intersect: false
+            }
+        }
+    });
+    
+    var ctx2 = document.getElementById('doughnutChart').getContext('2d');
+    var categoriesData = {{data.categories|safe}};
+    labels = Object.keys(categoriesData.amount);
+    values = Object.values(categoriesData.amount);
+    percentage = Object.values(categoriesData.percentage)
+    for (let i = 0; i < labels.length; i++){
+        const orignalLabel = labels[i];
+        const percent = Math.round((percentage[i] * 100 + Number.EPSILON) * 100) / 100;
+        labels[i] = orignalLabel + " (" + percent + "%)";
+    }
+    var data = {
+        labels: labels,
+        datasets: [{
+            label: "{{datatitle}}",
+            data: values,
+            backgroundColor: generateColors(labels.length),
+            hoverOffset: 4
+        }]
+    };
+    new Chart(ctx2, doughnutConfig(data));
+}); 
+
+
+function generateColors(numColors, startColor = 'rgba(75, 192, 192, 1)') {
+    const colors = [];
+    const [r, g, b] = startColor.match(/\d+/g).map(Number);
+
+    for (let i = 0; i < numColors; i++) {
+        const factor = i / numColors;
+        const newR = Math.floor(r * (1 - factor) + 255 * factor);
+        const newG = Math.floor(g * (1 - factor) + 255 * factor);
+        const newB = Math.floor(b * (1 - factor) + 255 * factor);
+        colors.push(`rgba(${newR}, ${newG}, ${newB}, 1)`);
+    }
+
+    return colors;
+}
+
+function doughnutConfig(data){
+    return {type: "doughnut", data: data}
+}
+
+document.getElementById('selectAll').addEventListener('change', function() {
+        var checkboxes = document.querySelectorAll('input[name="selected_items"]');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    });
+</script>
+{% endblock %}

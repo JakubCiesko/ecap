@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ECAP | {{datatitle}}{% endblock %}
+
+{% block content %}
+        {% include "sidebar.html" %} 
+        <div class="content">
+            {% include "navbar.html" %}
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-12 col-lg-6 col-xl-12">
+                        <div class="bg-light rounded d-flex p-4">
+                            <object data="{% static 'img/savings-hog.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+                            <div class="ms-3">
+                                <h5 class="mb-0">{{datatitle}}</h5>
+                                <p class="mb-0"><span>Number of saving goals: {{data|length}}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                        <div class="bg-light rounded p-4">
+                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner" id="carousel-inner">
+                                    {% for goal in data %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-lg-6">
+                                                        <h5 class="card-title">{{ goal.name }}</h5>
+                                                        <p class="card-text">Target Date: {{ goal.target_date }}</p>
+                                                        <p class="card-text">Remaining Days: {{ goal.remaining_days}}</p>
+                                                        <p class="card-text">Current Amount: ${{ goal.current_amount }}</p>
+                                                        <p class="card-text">Target Amount: ${{ goal.target_amount }}</p>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <canvas id="doughnutChart{{ goal.id }}"></canvas></div>
+                                                </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            var ctx = document.getElementById('doughnutChart{{ goal.id }}').getContext('2d');
+                            var doughnutChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Completed', 'Remaining'],
+                                    datasets: [{
+                                        label: 'Progress',
+                                        data: [{{ goal.percentage }}, 100 - {{  goal.percentage }}],
+                                        backgroundColor: [
+                                            'rgba(75, 192, 192, 0.5)',
+                                            'rgba(255, 99, 132, 0.5)'
+                                        ],
+                                        borderColor: [
+                                            'rgba(75, 192, 192, 1)',
+                                            'rgba(255, 99, 132, 1)'
+                                        ],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    plugins: {
+                                        legend: {
+                                            position: 'top',
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function (tooltipItem) {
+                                                    return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                    </script>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                            
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-light rounded  p-4">
+                    <div class="row g-4">
+                        <div class="col-sm-12 col-md-12 col-xl-12">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-floating mb-4">
+                                    <input type="date" name="target_date" class="form-control" id="id_date" required>
+                                    <label for="id_date">Saving Goal End Date</label>
+                                </div>
+                                <div class="form-floating mb-4">
+                                    <input type="text" class="form-control" id="floatingInput" name="name" placeholder="Name" required>
+                                    <label for="floatingInput">Name</label>
+                                </div>
+                                <div class="form-floating mb-4">
+                                    <input type="number" class="form-control" id="floatingInput" name="current_amount" placeholder="Current Amount" required>
+                                    <label for="floatingInput">Current Amount</label>
+                                </div>
+                                <div class="form-floating mb-4">
+                                    <input type="number" class="form-control" id="floatingInput" name="target_amount" placeholder="Target Amount" required>
+                                    <label for="floatingInput">Target Amount</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Create Saving Goal</button>
+                            </form>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid pt-4 px-4">
+            <div class="row g-4">
+                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                    <div class="bg-light p-4">
+                        <form method="post" action="{% url 'delete_selected_saving_goals' %}">
+                            {% csrf_token %}
+                            <div class="table-responsive">
+                                <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                    <thead>
+                                        <tr class="text-dark">
+                                            <th scope="col"><input class="form-check-input" type="checkbox" id="selectAll"></th>
+                                            <th scope="col">Saving Goal ID</th>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Current Amount</th> 
+                                            <th scope="col">Target Amount</th>
+                                            <th scope="col">Percentage</th>
+                                            <th scope="col"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportTable">
+                                        {% if data %}
+                                            {% for sg in data%}
+                                                <tr>
+                                                    <td><input class="form-check-input" type="checkbox" name="selected_items" value="{{ sg.id }}"></td>
+                                                    <td>{{sg.id}}</td>
+                                                    <td>{{sg.date}}</td>
+                                                    <td>{{sg.name}}</td>
+                                                    <td>{{sg.current_amount}}</td>
+                                                    <td>{{sg.target_amount}}</td>
+                                                    <td>{{sg.percentage}}</td>
+                                                    <td><a class="btn btn-sm btn-primary" href="" target="_blank">Modify</a></td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="submit" class="btn btn-danger mt-3">Delete Selected</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+            {% include "footer.html" %}
+            
+        </div>
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+{% block extrajs %}
+{% endblock %}

@@ -1,6 +1,15 @@
 from django.urls import path
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from . import views
+from django.conf.urls.static import static
+from django.conf.urls import handler404
+from django.shortcuts import render
+
+def custom_404(request, exception):
+    return render(request, "404.html", status=404)
+
+handler404 = custom_404
 
 urlpatterns = [
     path("", views.login_or_index, name="login_or_index"),
@@ -16,6 +25,21 @@ urlpatterns = [
     path("get_user_savings/", views.get_user_savings, name="get_user_savings"),
     path("get_user_report/", views.get_user_report, name="get_user_report"),
     path("create_user_report/<str:start_date>/<str:end_date>/", views.create_user_report, name="create_user_report"),
-    path("print_report/<str:report_id>/", views.print_report, name="print_report"),
-
-]
+    path("report/<str:report_id>/", views.print_report, name="print_report"),
+    path("process_message/", views.process_message, name="process_message"),
+    path("chat_list/", views.chat_list, name="chat_list"),
+    path("expense_category/", views.expense_category_percentage, name="expense_category_percentage"),
+    path("income_category/", views.income_category_percentage, name="income_category_percentage"),
+    path("saving_goal/", views.saving_goal, name="saving_goal"),
+    path("messages/<str:conversation_id>/", views.messages, name="messages"),
+    path("messages/", views.general_messages, name="general_messages"),
+    path("send_message/", views.send_message, name="send_message"),
+    path("income/", views.income, name="income"),
+    path("expense/", views.expense, name="expense"),
+    path("comparison/", views.login_or_index, name="comparison"),
+    path("saving_goals/", views.saving_goal_view, name="saving_goal_view"),
+    path("delete_selected_expenses/", views.delete_selected_expenses, name="delete_selected_expenses"),
+    path("delete_selected_incomes/", views.delete_selected_incomes, name="delete_selected_incomes"),
+    path('delete_selected_reports/', views.delete_selected_reports, name='delete_selected_reports'),
+    path('delete_selected_saving_goals/', views.delete_selected_saving_goals, name='delete_selected_saving_goals'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
