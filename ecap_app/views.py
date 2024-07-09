@@ -6,7 +6,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
 from django.templatetags.static import static
-#from django.template.loader import render_to_string
 from datetime import datetime
 from .models import *
 from .utils import *
@@ -19,18 +18,41 @@ checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
 model = lambda x: x#pipeline("text2text-generation", model=checkpoint)
 print("Everything loaded, ask away!")
 
-def generate_response(prompt):
+def generate_response(prompt: str) -> str:
+    """
+    Generate a response based on the given prompt using a pre-trained text generation model.
+
+    Parameters:
+    prompt (str): The prompt or input text for generating the response.
+
+    Returns:
+    str: The generated response text based on the input prompt.
+    """
     return model(
         prompt,
-        max_new_tokens=500,  # Adjust this value based on your needs
-        num_return_sequences=1,  # Number of responses to generate
-        temperature=0.7,  # Control randomness in the response
-        top_k=50,  # Consider top_k tokens with highest probability
-        top_p=0.95,  # Consider tokens with cumulative probability above this threshold ADD do_sample=True
+        max_new_tokens=500,  
+        num_return_sequences=1,  
+        temperature=0.7,  
+        top_k=50,  
+        top_p=0.95,
     )
 
-
 def login_or_index(request):
+    """
+    View function for handling user login or rendering login form.
+
+    If the user is already authenticated, it renders the 'index.html' template with the
+    active menu set to 'login_or_index'. If the request method is POST, it attempts to
+    authenticate the user using the provided form data. Upon successful authentication,
+    the user is logged in and redirected to the 'login_or_index' view. If the request
+    method is GET, it renders the 'login.html' template with an AuthenticationForm.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    HttpResponse: Rendered HTML response based on user authentication status and form validation.
+    """
     if request.user.is_authenticated:
         return render(request, "index.html", context={"active_menu": "login_or_index"})
     if request.method == "POST":
@@ -45,6 +67,17 @@ def login_or_index(request):
 
 @login_required
 def index(request):
+    """
+    View function for rendering the dashboard (index) page.
+
+    Renders the 'index.html' template with the active menu set to 'dashboard'.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    HttpResponse: Rendered HTML response for the dashboard page.
+    """
     return render(request, "index.html", context={"active_menu": "dashboard"})
 
 def signup(request):
@@ -65,6 +98,20 @@ def signup(request):
 
 @login_required
 def get_user_expenses(request):
+    """
+    View function for handling user registration and rendering signup form.
+
+    If the request method is POST, it attempts to validate and save user registration
+    form data. Upon successful registration, the user is logged in and redirected to
+    the 'login_or_index' view. If the request method is GET, it renders the 'signup.html'
+    template with an empty SignUpForm.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    HttpResponse: Rendered HTML response based on user registration status and form validation.
+    """
     user = request.user
     try:
         user_expenses = get_user_expenses_by_date(user).to_dict()
@@ -74,6 +121,20 @@ def get_user_expenses(request):
 
 @login_required
 def get_user_incomes(request):
+    """
+    Retrieves and returns the user's income data as JSON response.
+
+    Fetches income data for the authenticated user using `get_user_incomes_by_date`
+    function and converts it to a dictionary. If successful, returns a JsonResponse
+    containing dates and corresponding amounts. If no data is found, returns a JsonResponse
+    with an error message and status code 200.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing user's income data or an error message.
+    """
     user = request.user
     try:
         user_incomes = get_user_incomes_by_date(user).to_dict()
@@ -83,21 +144,70 @@ def get_user_incomes(request):
 
 @login_required
 def get_user_total_income(request):
+    """
+    Retrieves and returns the total income of the authenticated user as JSON response.
+
+    Calculates the total income using `calculate_total_user_income` function and returns
+    it as a JsonResponse.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing total income of the user.
+    """
     user = request.user
     return JsonResponse({"user_income": calculate_total_user_income(user)})
 
 @login_required
 def get_user_total_expense(request):
+    """
+    Retrieves and returns the total expenses of the authenticated user as JSON response.
+
+    Calculates the total expenses using `calculate_total_user_expenses` function and returns
+    it as a JsonResponse.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing total expenses of the user.
+    """
     user = request.user
     return JsonResponse({"user_expense": calculate_total_user_expenses(user)})
 
 @login_required
 def get_user_total_balance(request):
+    """
+    Retrieves and returns the total balance of the authenticated user as JSON response.
+
+    Calculates the total balance using `calculate_total_user_balance` function and returns
+    it as a JsonResponse.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing total balance of the user.
+    """
     user = request.user
     return JsonResponse({"user_balance": calculate_total_user_balance(user)})
 
 @login_required
 def get_user_expected_expenses(request):
+    """
+    Retrieves and returns the expected expenses of the authenticated user for the next 10 days as JSON response.
+
+    Extrapolates expected expenses using `extrapolate_user_expenses` function for the next 10 days
+    and returns dates and corresponding amounts as a JsonResponse. If no expenses are found, returns
+    a JsonResponse with an error message and status code 200.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing expected expenses of the user for the next 10 days or an error message.
+    """
     user = request.user
     try:
         dates, amount = extrapolate_user_expenses(user, 10)
@@ -107,6 +217,19 @@ def get_user_expected_expenses(request):
 
 @login_required
 def get_user_expected_incomes(request):
+    """
+    Retrieves and returns the expected incomes of the authenticated user for the next 10 days as JSON response.
+
+    Extrapolates expected incomes using `extrapolate_user_income` function for the next 10 days
+    and returns dates and corresponding amounts as a JsonResponse. If no incomes are found, returns
+    a JsonResponse with an error message and status code 200.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing expected incomes of the user for the next 10 days or an error message.
+    """
     user = request.user
     try:
         dates, amount = extrapolate_user_income(user, 10)
@@ -116,12 +239,37 @@ def get_user_expected_incomes(request):
 
 @login_required
 def get_user_savings(request):
+    """
+    Retrieves and returns the saving goals of the authenticated user as JSON response.
+
+    Fetches saving goals from `SavingGoal` model filtered by the authenticated user and returns
+    current and target amounts for each saving goal as a JsonResponse.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing saving goals of the user with current and target amounts.
+    """
     user = request.user
     saving_goals = SavingGoal.objects.filter(user=user)
     return JsonResponse({"saving_goals":[{"current": saving_goal.current_amount, "target": saving_goal.target_amount} for saving_goal in saving_goals]})
 
 @login_required
 def get_user_report(request):
+    """
+    Retrieves and returns the reports of the authenticated user as JSON response.
+
+    Fetches reports from `Report` model filtered by the authenticated user and constructs
+    a list of report data containing username, report ID, start and end dates, total expenses,
+    total incomes, and lists of expenses and incomes as JSON response. Reports are sorted by ID.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+    JsonResponse: JSON response containing reports of the user with detailed report data.
+    """
     user = request.user
     reports = Report.objects.filter(user=user)
     report_data = [{
@@ -138,6 +286,21 @@ def get_user_report(request):
 
 @login_required
 def create_user_report(request, start_date, end_date):
+    """
+    Creates and returns a new report for the authenticated user for the specified date range as JSON response.
+
+    Creates a new report using `create_report_for_user` function for the authenticated user with the provided
+    start and end dates. Constructs report data containing username, report ID, start and end dates, total expenses,
+    total incomes, and lists of expenses and incomes. Returns the newly created report data as a JsonResponse with status 200.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+    start_date (str): Start date of the report in "YYYY-MM-DD" format.
+    end_date (str): End date of the report in "YYYY-MM-DD" format.
+
+    Returns:
+    JsonResponse: JSON response containing newly created report data.
+    """
     start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
     end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
     report = create_report_for_user(request.user, start_date, end_date)
@@ -155,6 +318,20 @@ def create_user_report(request, start_date, end_date):
     
 @login_required
 def print_report(request, report_id):
+    """
+    Renders and returns the report template for the authenticated user as HTTP response.
+
+    Fetches the report with the specified report_id from `Report` model. If the authenticated user is
+    the owner of the report, renders the report template with the report context and returns it as
+    an HTTP response. Otherwise, returns HTTP 403 Forbidden status.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing metadata about the request.
+    report_id (int): ID of the report to be rendered.
+
+    Returns:
+    HttpResponse: Rendered report template as HTTP response or HTTP 403 Forbidden if user is not authorized.
+    """
     user = request.user
     report = get_object_or_404(Report, pk=report_id)
     if report.user.id == user.id:
@@ -166,6 +343,16 @@ def print_report(request, report_id):
 
 @login_required
 def process_message(request):
+    """
+    Handles incoming POST requests containing a JSON payload with a 'message' key.
+    Uses the message to generate a response and returns it as a JSON response.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing the POST data.
+
+    Returns:
+        JsonResponse: A JSON response containing the generated chatbot response.
+    """
     if request.method == "POST":
         data = json.loads(request.body)
         user_message = data.get("message", "")
@@ -176,6 +363,16 @@ def process_message(request):
 
 @login_required
 def chat_list(request):
+    """
+    Retrieves the list of chats associated with the current authenticated user.
+    Constructs a JSON response containing chat details including usernames and profile picture URLs.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing a list of chats with their details.
+    """
     user = request.user
     chats = Chat.objects.filter(user1 = user.id) | Chat.objects.filter(user2 = user.id)
     user_id = user.id
@@ -195,14 +392,41 @@ def chat_list(request):
 
 @login_required
 def expense_category_percentage(request):
+    """
+    Retrieves the percentage distribution of expense categories for the current authenticated user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the percentage distribution of expense categories.
+    """
     return JsonResponse({"data": get_user_expense_categories(request.user)})
 
 @login_required
 def income_category_percentage(request):
+    """
+    Retrieves the percentage distribution of income categories for the current authenticated user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the percentage distribution of income categories.
+    """
     return JsonResponse({"data": get_user_income_categories(request.user)})
 
 @login_required
 def saving_goal(request):
+    """
+    Retrieves the saving goal details for the current authenticated user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the saving goal details.
+    """
     try: 
         return JsonResponse(get_saving_goal(request.user))
     except AttributeError:
@@ -210,6 +434,16 @@ def saving_goal(request):
 
 @login_required
 def messages(request, conversation_id):
+    """
+    Retrieves messages for a specific conversation and renders them in the 'messages.html' template.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        conversation_id (int): The ID of the conversation for which messages are to be retrieved.
+
+    Returns:
+        HttpResponse: A rendered HTTP response displaying messages for the conversation.
+    """
     user = request.user
     messages, other_chats = [], []
     other_user_username = ""
@@ -229,6 +463,18 @@ def messages(request, conversation_id):
 
 @login_required
 def general_messages(request):
+    """
+    Retrieves the general messages for the authenticated user's first chat and renders them in the 'messages.html' template.
+
+    If the user has chats, retrieves the first chat and its messages, along with other chats and the username of the other user in the chat.
+    Renders these details along with the 'messages.html' template.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: A rendered HTTP response displaying messages for the user's first chat.
+    """
     user = request.user
     messages, other_chats = [], []
     other_user_username = ""
@@ -249,6 +495,18 @@ def general_messages(request):
 
 @login_required
 def send_message(request):
+    """
+    Handles sending messages to a specific chat identified by the chat_id parameter via a POST request.
+
+    Retrieves the chat using the chat_id, checks if the authenticated user is a participant in the chat.
+    Creates a new message object and saves it to the database.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the sender username, message content, and timestamp of the sent message.
+    """
     if request.method == "POST":
         chat_id = request.POST.get("chat_id")
         content = request.POST.get("content")
@@ -270,6 +528,18 @@ def send_message(request):
 
 @login_required
 def income(request):
+    """
+    Handles the income data input form submission via POST or renders the form for GET requests.
+
+    If the request method is POST, validates the IncomeForm data and saves the income entry for the authenticated user.
+    If the form is valid, redirects to the 'income' page.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: Renders the 'data_input_form.html' template with the income data input form.
+    """
     if request.method == "POST":
         form = IncomeForm(request.POST)
         if form.is_valid():
@@ -285,6 +555,18 @@ def income(request):
 
 @login_required
 def expense(request):
+    """
+    Handles the expense data input form submission via POST or renders the form for GET requests.
+
+    If the request method is POST, validates the ExpenseForm data and saves the expense entry for the authenticated user.
+    If the form is valid, redirects to the 'expense' page.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: Renders the 'data_input_form.html' template with the expense data input form.
+    """
     if request.method == "POST":
         form = ExpenseForm(request.POST)
         if form.is_valid():
@@ -301,6 +583,19 @@ def expense(request):
 
 @login_required
 def delete_selected_expenses(request):
+    """
+    Deletes selected expense items based on POST request data.
+
+    Retrieves selected expense item IDs from POST data and deletes corresponding Expense objects.
+    Redirects to the 'expense' page after deletion.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing selected expense item IDs.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'expense' page.
+
+    """
     if request.method == "POST":
         selected_items = request.POST.getlist("selected_items")
         selected_items = [item for item in selected_items if item]
@@ -310,6 +605,19 @@ def delete_selected_expenses(request):
 
 @login_required
 def delete_selected_incomes(request):
+    """
+    Deletes selected income items based on POST request data.
+
+    Retrieves selected income item IDs from POST data and deletes corresponding Income objects.
+    Redirects to the 'income' page after deletion.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing selected income item IDs.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'income' page.
+
+    """
     if request.method == "POST":
         selected_items = request.POST.getlist("selected_items")
         selected_items = [item for item in selected_items if item]
@@ -320,6 +628,19 @@ def delete_selected_incomes(request):
 
 @login_required
 def delete_selected_reports(request):
+    """
+    Deletes selected report items based on POST request data.
+
+    Retrieves selected report item IDs from POST data and deletes corresponding Report objects.
+    Returns a JSON response indicating success or failure of the deletion operation.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing selected report item IDs in JSON format.
+
+    Returns:
+        JsonResponse: A JSON response indicating the status of the deletion operation.
+
+    """
     if request.method == "POST":
         data = json.loads(request.body)
         selected_items = data.get("selected_items", [])
@@ -333,6 +654,20 @@ def delete_selected_reports(request):
 
 @login_required
 def saving_goal_view(request):
+    """
+    Renders the saving goal creation form or handles its submission via POST request.
+
+    If the request method is POST, validates the SavingGoalForm data and saves the saving goal entry for the authenticated user.
+    If the form is valid, redirects to the 'saving_goal_view' page.
+    Renders the 'saving_goal.html' template with the SavingGoalForm.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: Renders the 'saving_goal.html' template with the saving goal creation form.
+
+    """
     if request.method == "POST":
         form = SavingGoalForm(request.POST)
         if form.is_valid():
@@ -348,6 +683,19 @@ def saving_goal_view(request):
 
 @login_required
 def delete_selected_saving_goals(request):
+    """
+    Deletes selected saving goal items based on POST request data.
+
+    Retrieves selected saving goal item IDs from POST data and deletes corresponding SavingGoal objects.
+    Redirects to the 'saving_goal_view' page after deletion.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing selected saving goal item IDs.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'saving_goal_view' page.
+
+    """
     if request.method == "POST":
         selected_items = request.POST.getlist("selected_items")
         selected_items = [item for item in selected_items if item]

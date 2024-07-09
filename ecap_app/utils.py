@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression
 from .models import Expense, Income, Report, SavingGoal
 from django.contrib.auth.models import User
 from django.db.models import Max, Min, Avg
+from django.http import HttpRequest
 from typing import List, Callable, Tuple
 
 
@@ -459,37 +460,119 @@ def get_user_expense_aggregates(user: User) -> dict:
     return {"min": (0, today), "max": (0, today), "avg": (0, today)}
 
 def std(data: np.array) -> np.ndarray:
+    """
+    Calculate the standard deviation of a numpy array.
+
+    Parameters:
+    data (np.array): An array of numerical values.
+
+    Returns:
+    np.ndarray: The standard deviation of the input array.
+    """
     return np.std(data)
 
 def get_user_object_std(user: User, Object):
+    """
+    Calculate the standard deviation of the 'amount' attribute for a user's objects.
+
+    Parameters:
+    user (User): The user whose objects are being queried.
+    Object: The model class of the objects being queried.
+
+    Returns:
+    float: The standard deviation of the 'amount' attribute for the user's objects.
+           Returns 0 if the user has no objects.
+    """
     amounts = [obj.amount for obj in Object.objects.filter(user=user)]
     if amounts: 
         return std(amounts)
     return 0
 
 def get_user_income_std(user: User) -> float:
+    """
+    Calculate the standard deviation of the user's income amounts.
+
+    Parameters:
+    user (User): The user whose income is being queried.
+
+    Returns:
+    float: The standard deviation of the user's income amounts.
+           Returns 0 if the user has no income records.
+    """
     return get_user_object_std(user, Income)
 
-def get_user_expense_std(user: User) -> float: 
+def get_user_expense_std(user: User) -> float:
+    """
+    Calculate the standard deviation of the user's expense amounts.
+
+    Parameters:
+    user (User): The user whose expenses are being queried.
+
+    Returns:
+    float: The standard deviation of the user's expense amounts.
+           Returns 0 if the user has no expense records.
+    """
     return get_user_object_std(user, Expense)
 
 def get_model_slope(model: LinearRegression) -> float:
+    """
+    Get the slope (coefficient) of a linear regression model.
+
+    Parameters:
+    model (LinearRegression): The linear regression model.
+
+    Returns:
+    float: The slope (coefficient) of the linear regression model.
+           Returns 0 if the model is None.
+    """
     if model: 
         return model.coef_[0]
     return 0
 
-def get_expense_slope(user: User):
+def get_expense_slope(user: User) -> float:
+    """
+    Calculate the slope of the linear regression model for the user's expenses over time.
+
+    Parameters:
+    user (User): The user whose expense data is being analyzed.
+
+    Returns:
+    float: The slope of the linear regression model for the user's expenses.
+           This represents the trend of the user's expenses over time.
+    """
     data = preprocess_date_data(get_user_expenses_by_date(user))
     model = train_model(data)
     return get_model_slope(model)
 
-def get_income_slope(user: User):
+def get_income_slope(user: User) -> float:
+    """
+    Calculate the slope of the linear regression model for the user's incomes over time.
+
+    Parameters:
+    user (User): The user whose income data is being analyzed.
+
+    Returns:
+    float: The slope of the linear regression model for the user's incomes.
+           This represents the trend of the user's incomes over time.
+    """
     data = preprocess_date_data(get_user_incomes_by_date(user))
     model = train_model(data)
     return get_model_slope(model)
 
 
-def get_expense_context(request):
+def get_expense_context(request: HttpRequest) -> dict:
+    """
+    Generate the context data for the expense view.
+
+    This function aggregates user expense data, processes it for chart display,
+    and prepares the context needed for rendering the expense page.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing user information.
+
+    Returns:
+    dict: A dictionary containing the context data for the expense view.
+    """
     aggregates = get_user_expense_aggregates(request.user)
     dates, amount = extrapolate_user_expenses(request.user)
     user_expenses = get_user_expenses_by_date(request.user).to_dict()
@@ -519,7 +602,19 @@ def get_expense_context(request):
     }
     return {"datatitle": "Expense", "data": data, "active_menu": "expense"}
 
-def get_income_context(request):
+def get_income_context(request: HttpRequest) -> dict:
+    """
+    Generate the context data for the income view.
+
+    This function aggregates user income data, processes it for chart display,
+    and prepares the context needed for rendering the income page.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing user information.
+
+    Returns:
+    dict: A dictionary containing the context data for the income view.
+    """
     aggregates = get_user_income_aggregates(request.user)
     dates, amount = extrapolate_user_income(request.user)
     user_expenses = get_user_incomes_by_date(request.user).to_dict()
@@ -549,7 +644,20 @@ def get_income_context(request):
     }
     return {"datatitle": "Income", "data": data, "active_menu": "income"}
 
-def get_saving_goal_context(request):
+def get_saving_goal_context(request: HttpRequest) -> dict:
+    """
+    Generate the context data for the saving goals view.
+
+    This function retrieves saving goals for the current user, calculates
+    relevant statistics such as remaining days and percentage progress, and
+    formats the data into a dictionary suitable for rendering the saving goals page.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing user information.
+
+    Returns:
+    dict: A dictionary containing the context data for the saving goals view.
+    """
     return {
     "data": [{
             "id": sg.id,  
