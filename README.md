@@ -24,7 +24,27 @@ To run Ecap locally or on your server, follow these steps:
 
 2. **Set up a virtual environment:**
 
-```bash
-python -m venv env
-source env/bin/activate  # On Windows use `env\Scripts\activate`
+   ```bash
+   python -m venv env
+   source env/bin/activate  # On Windows use `env\Scripts\activate`
+
+3. **Install dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+
+4. **Set up the database:**
+
+   ```bash
+   python manage.py migrate
+   
+6. **Create a superuser (admin):**
+
+    ```bash
+   python manage.py createsuperuser
+7. **Run the development server:**
+
+   ```bash
+   python manage.py runserver
+
 
