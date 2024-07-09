@@ -19,7 +19,7 @@ To run Ecap locally or on your server, follow these steps:
 1. **Clone the repository:**
 
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/JakubCiesko/ecap.git
    cd Ecap
 
 2. **Set up a virtual environment:**
