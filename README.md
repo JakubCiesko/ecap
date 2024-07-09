@@ -47,6 +47,7 @@ To run Ecap locally or on your server, follow these steps:
    ```bash
    python manage.py runserver
 
+## Screenshots of the app
 
 ![Dashboard](/screenshots/dashboard.png)
 *Dashboard view in Ecap showing summary of expenses and incomes.*
