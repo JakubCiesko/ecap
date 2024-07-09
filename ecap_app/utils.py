@@ -58,8 +58,8 @@ def calculate_balance(expenses_fn:Callable, incomes_fn:Callable, *args, **kwargs
     :param incomes_fn: Function to calculate income.
     :return: Calculated balance.
     """
-    expenses = expenses_fn(*args, **kwargs)
-    incomes = incomes_fn(*args, **kwargs)
+    expenses = float(expenses_fn(*args, **kwargs))
+    incomes = float(incomes_fn(*args, **kwargs))
     return incomes - expenses
 
 def calculate_total_user_balance(user:User) -> float:

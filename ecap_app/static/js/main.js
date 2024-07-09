@@ -22,9 +22,9 @@
     });
 
     // Calendar
-    $('#calender').datetimepicker({
+    /*$('#calender').datetimepicker({
         inline: true,
         format: 'L'
-    });
+    });*/
  
 })(jQuery);
