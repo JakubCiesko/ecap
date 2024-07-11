@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ECAP - Personal Budget Tracker{% endblock %}
+
+{% block content %}
+        {% include "sidebar.html" %} 
+        <!-- Content Start 
+        "total_income":calculate_total_user_income(user),
+        "total_expense":calculate_total_user_expenses(user),
+        "total_balance":calculate_total_user_balance(user),
+        "monthly_income":calculate_monthly_income(user), 
+        "monthly_expense":calculate_monthly_expense(user),
+        "saving_goal_progress": calculate_saving_goal_progress(user)-->
+    
+        <div class="content">
+            {% include "navbar.html" %}
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                        <div class="bg-light rounded p-4">
+                            {% if friends %}
+                            <div id="friendComparisonCarousel" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    {% for friend in friends %}
+                                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                            <div class="row g-4">
+                                                <!--USER DATA-->
+                                                <div class="col-xl-6 col-lg-6 col-sm-12">
+                                                    <div class="card mb-4">
+                                                        <div class="card-body">
+                                                            <div class="d-flex align-items-center  mb-4">
+                                                                <img class="rounded-circle me-lg-2" src="{{user.picture_url}}" alt="{{user.username}}" style="width: 40px; height: 40px;">
+                                                                <h3 class="mb-0 user-message">Your data</h3>
+                                                            </div>
+                                                            
+                                                            <p><strong>Total Income:</strong> {{ user.total_income }} €</p>
+                                                            <p><strong>Total Expense:</strong> {{ user.total_expense }} €</p>
+                                                            <p><strong>Total Balance:</strong> {{ user.total_balance }} €</p>
+                                                            <p><strong>Monthly Income:</strong> {{ user.monthly_income }} €</p>
+                                                            <p><strong>Monthly Expense:</strong> {{ user.monthly_expense }} €</p>
+                                                            <p><strong>Savings Goal Progress:</strong> {{ user.saving_goal_progress }}%</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--FRIEND DATA-->
+                                                <div class="col-xl-6 col-lg-6 col-sm-12">
+                                                    <div class="card mb-4">
+                                                        <div class="card-body">
+                                                            <div class="d-flex align-items-center  mb-4">
+                                                                <img class="rounded-circle me-lg-2" src="{{friend.picture_url}}" alt="{{friend.username}}" style="width: 40px; height: 40px;">
+                                                                <h3 class="mb-0 other-message">{{friend.username}}</h3>
+                                                            </div>
+                                                            <p><strong>Total Income:</strong> {{ friend.total_income }} €</p>
+                                                            <p><strong>Total Expense:</strong> {{ friend.total_expense }} €</p>
+                                                            <p><strong>Total Balance:</strong> {{ friend.total_balance }} €</p>
+                                                            <p><strong>Monthly Income:</strong> {{ friend.monthly_income }} €</p>
+                                                            <p><strong>Monthly Expense:</strong> {{ friend.monthly_expense }} €</p>
+                                                            <p><strong>Savings Goal Progress:</strong> {{ friend.saving_goal_progress }} %</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row g-4">
+                                                <div class="col-xl-12 col-lg-12 col-sm-12">
+                                                    <canvas id="friendChart{{ forloop.counter }}"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#friendComparisonCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#friendComparisonCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include "footer.html" %}
+            
+        </div>
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+{% endblock %}
+
+
+{% block extraJs %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for friend in friends %}
+        console.log("{{friend.total_income }}")
+        var ctx = document.getElementById('friendChart{{ forloop.counter }}').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Total Income', 'Total Expense', 'Total Balance', 'Monthly Income', 'Monthly Expense', 'Savings Goal Progress'],
+                datasets: [{
+                    label: 'Your data',
+                    data: [{{ user.total_income }}, {{ user.total_expense }}, {{ user.total_balance }}, {{ user.monthly_income }}, {{ user.monthly_expense }}, {{user.saving_goal_progress }}],
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                    {
+                    label: '{{ friend.username }}',
+                    data: [{{ friend.total_income }}, {{ friend.total_expense }}, {{ friend.total_balance }}, {{ friend.monthly_income }}, {{ friend.monthly_expense }}, {{friend.saving_goal_progress}}],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                /*{
+                        data: [null, null, null, null, null, {{ friend.saving_goal_progress }}],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        
+                        data: [null, null, null, null, null, {{ user.saving_goal_progress }}],
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }*/
+            ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: "Amount (€)"
+                        }
+                    },
+                    /*y1: {
+                        beginAtZero: false,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Savings Goal Progress'
+                        },
+                        ticks: {
+                            max: 1,
+                            stepSize: 0.1
+                        }
+                    }*/
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                return tooltipItem.dataset.label + ': €' + tooltipItem.raw.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endfor %}
+    });
+</script>
+{% endblock %}

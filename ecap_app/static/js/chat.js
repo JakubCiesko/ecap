@@ -1,48 +1,3 @@
-async function getChatList(){
-    let chatList = [];
-    await getDataFromUrl("/chat_list")
-    .then(response => {
-        chatList = response.chats;    
-    })
-    return chatList;
-}
-
-
-function createChatNavbarItem(navbarChatList, userName, userProfilPictureURL, chatID){
-    let link = document.createElement("a");
-    link.classList.add("dropdown-item");
-    link.href= '/messages/' + chatID;
-    let div = document.createElement("div");
-    div.classList.add("d-flex", "align-items-center");
-    let imgDiv = document.createElement("div");
-    imgDiv.classList.add("flex-shrink-0");
-    let textDiv = document.createElement("div");
-    textDiv.classList.add("ms-2");
-    let hr = document.createElement("hr");
-    hr.classList.add("dropdown-divider");
-    imgDiv.innerHTML = '<a ><img class="rounded-circle" src="'+ userProfilPictureURL + '" alt="" style="width: 40px; height: 40px;">';
-    textDiv.innerHTML = "<h6 class='fw-normal mb-0'>" + userName + " sent you a message</h6></a>";
-    div.appendChild(imgDiv);
-    div.appendChild(textDiv);
-    link.appendChild(div);
-    link.appendChild(hr);
-    navbarChatList.appendChild(link);
-}
-
-async function displayChatList(){
-    const navbarChatList = document.getElementById("navbarChatList");
-    navbarChatList.innerHTML = "";
-    getChatList()
-    .then(chatList => {
-        chatList[0].forEach(chat => {
-            let messageFrom = chat.different_user;
-            let profilepicURL = chat.different_user_profilepic_url;
-            let chatID = chat.chat_id;
-            createChatNavbarItem(navbarChatList, messageFrom, profilepicURL, chatID);
-        })
-    })
-}
-
 document.getElementById('send-btn').addEventListener('click', function() {
     var userMessage = document.getElementById('user-message').value;
     if (userMessage.trim() !== "") {
@@ -59,7 +14,6 @@ function addMessageToChatBox(sender, message, color) {
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
 }
-
 
 function sendMessageToServer(message) {
     fetch('/process_message/', {
@@ -98,6 +52,3 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
-
-displayChatList();

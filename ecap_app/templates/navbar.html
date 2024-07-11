@@ -10,13 +10,16 @@
         <div class="nav-item dropdown">
             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fa fa-envelope me-lg-2"></i>
-                <span class="d-none d-lg-inline-flex">Message</span>
+                <span class="d-none d-lg-inline-flex">Messages</span>
             </a>
             <div id="navbarChatList" class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
-                <a href="#" class="dropdown-item text-center">See all message</a>
+                <div id="chatListItems">
+                    <!--MESSAGES ARE LOADED DYNAMICALLY-->
+                </div>
+                <a href="{% url 'general_messages' %}" class="dropdown-item text-center">See all messages</a>
             </div>
         </div>
-        <div class="nav-item dropdown">
+        <!--<div class="nav-item dropdown">
             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fa fa-bell me-lg-2"></i>
                 <span class="d-none d-lg-inline-flex">Notificatin</span>
@@ -39,7 +42,7 @@
                 <hr class="dropdown-divider">
                 <a href="#" class="dropdown-item text-center">See all notifications</a>
             </div>
-        </div>
+        </div>-->
         <div class="nav-item dropdown">
             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
                 <img class="rounded-circle me-lg-2" src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'img/default_user.jpg' %}{% endif %}" alt="" style="width: 40px; height: 40px;">

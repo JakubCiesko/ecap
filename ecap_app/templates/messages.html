@@ -26,7 +26,22 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                    </div>  
+                    </div>
+                    <div class="something">
+                        <button id="toggle-form-btn" class="btn btn-secondary">Start New Chat</button>
+                        <form id="start-chat-form" method="POST" action="{% url 'general_messages' %}" style="display: none;">
+                            {% csrf_token %}
+                            <div class="input-group mt-2">
+                                <select class="form-select" name="user_id">
+                                    <option value="" selected disabled>Pick a user to chat with</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-primary" type="submit">Start Chat</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -35,13 +50,18 @@
         <div class="row g-4">
             <div class="col-sm-12 col-md-12 col-xl-12">
                 <div class="h-100 bg-light rounded p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h6 class="mb-0">Chat with {{other_user}}</h6>
+                    <div class="d-flex align-items-center  mb-4">
+                        {% if other_user %}
+                            <img class="rounded-circle me-lg-2" src="{% if other_user.profile.profile_picture %}{{ other_user.profile.profile_picture.url }}{% else %}{% static 'img/default_user.jpg' %}{% endif %}" alt="" style="width: 40px; height: 40px;">
+                            <h6 class="mb-0 other-message">{{other_user.username}}</h6>
+                        {% endif %}
                     </div>
                     <div id="chat-box" class="mb-4" style="height: 300px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px;">
                         <div>
                             {% for message in messages %}
-                                <p><strong>{{message.sender.username}}:</strong> {{ message.content }} <em>{{ message.timestamp }}</em></p>
+                                <p class="{% if message.sender == request.user %}user-message{% else %}other-message{% endif %}">
+                                    <strong>{{ message.sender.username }}:</strong> {{ message.content }} <em>{{ message.timestamp }}</em>
+                                </p>
                             {% endfor %}
                         </div>
                     </div>
@@ -59,10 +79,20 @@
 {% block extraJs %}
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
+        const toggleFormButton = document.getElementById('toggle-form-btn');
+        const startChatForm = document.getElementById('start-chat-form');
+
+        toggleFormButton.addEventListener('click', () => {
+            if (startChatForm.style.display === 'none') {
+                startChatForm.style.display = 'block';
+            } else {
+                startChatForm.style.display = 'none';
+            }
+        });
         const sendButton = document.getElementById('send-btn');
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('user-message');
-        const chatId = {{ chat.id }};  // NEEDS TO BE ADDRESSED WHEN NO CHATS EXIST Assuming chat.id is available in your template context
+        const chatId = {{ chat.id|default:"null" }};  // NEEDS TO BE ADDRESSED WHEN NO CHATS EXIST Assuming chat.id is available in your template context
     
         sendButton.addEventListener('click', () => {
             const messageContent = messageInput.value.trim();
@@ -83,6 +113,7 @@
                     } else {
                         const newMessage = document.createElement('p');
                         newMessage.innerHTML = `<strong>${data.sender}:</strong> ${data.content} <em>${data.timestamp}</em>`;
+                        newMessage.classList.add(data.sender === "{{ request.user.username }}" ? "user-message" : "other-message");
                         chatBox.appendChild(newMessage);
                         messageInput.value = '';
                         chatBox.scrollTop = chatBox.scrollHeight;
@@ -108,4 +139,5 @@
             return cookieValue;
         }
     });</script>
-    {% endblock %}
+
+{% endblock %}

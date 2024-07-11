@@ -199,17 +199,19 @@ async function displayUserSavingGoal(){
     let percentage = Math.round((fetchedData.percentage * 100 + Number.EPSILON) * 100) / 100;
     let remainingPercentage = 100 - percentage;
     destroyChart(savingGoalChart);
-    let labels = ["Saved (" + percentage + "%)", "Remaining (" + remainingPercentage+ "%)"];
-    const data = {
-        labels: labels,
-        datasets: [{
-          label: "Saving Goal",
-          data: [current, goal - current],
-          backgroundColor: generateColors(labels.length),
-          hoverOffset: 4
-        }]
-    };
-    savingGoalChart = new Chart(ctx, doughnutConfig(data));
+    if (percentage && remainingPercentage){
+        let labels = ["Saved (" + percentage + "%)", "Remaining (" + remainingPercentage+ "%)"];
+        const data = {
+            labels: labels,
+            datasets: [{
+            label: "Saving Goal",
+            data: [current, goal - current],
+            backgroundColor: generateColors(labels.length),
+            hoverOffset: 4
+            }]
+        };
+        savingGoalChart = new Chart(ctx, doughnutConfig(data));
+    }
     
 } 
 

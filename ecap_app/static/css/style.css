@@ -279,3 +279,17 @@
 .table-responsive {
     max-height:300px;
 }
+
+.user-message {
+    color: #38c7aa;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.other-message {
+    color: #BB436C;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}

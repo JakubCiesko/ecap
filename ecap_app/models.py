@@ -62,7 +62,7 @@ class Report(models.Model):
     
     def calculate_totals(self):
         self.total_expenses = self.expenses.annotate(total_cost=models.F("amount")).aggregate(total=models.Sum("total_cost"))["total"] or 0
-        self.total_incomes = self.incomes.aggregate(total=models.Sum('amount'))['total'] or 0
+        self.total_incomes = self.incomes.aggregate(total=models.Sum("amount"))["total"] or 0
         self.total_balance = self.total_incomes - self.total_expenses
         
     def populate_expenses_and_incomes(self):
@@ -72,14 +72,14 @@ class Report(models.Model):
 
     
 class Chat(models.Model):
-    user1 = models.ForeignKey(User, related_name='conversations_started', on_delete=models.CASCADE)
-    user2 = models.ForeignKey(User, related_name='conversations_joined', on_delete=models.CASCADE)
+    user1 = models.ForeignKey(User, related_name="conversations_started", on_delete=models.CASCADE)
+    user2 = models.ForeignKey(User, related_name="conversations_joined", on_delete=models.CASCADE)
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user1', 'user2'],
-                name='unique_chat',
-                condition=models.Q(user1__lt=models.F('user2'))
+                fields=["user1", "user2"],
+                name="unique_chat",
+                condition=models.Q(user1__lt=models.F("user2"))
             ),
         ]
     
@@ -92,8 +92,8 @@ class Chat(models.Model):
         return f"Conversation between {self.user1.username} and {self.user2.username}"
     
 class Message(models.Model):
-    chat = models.ForeignKey(Chat, related_name='messages', on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, related_name="messages", on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     
@@ -101,9 +101,9 @@ class Message(models.Model):
         return f"Message from {self.sender} in chat {self.chat.id} at {self.timestamp}"
 
 def get_profile_picture_filepath(instance, filename):
-    ext = filename.split('.')[-1]
+    ext = filename.split(".")[-1]
     filename = f"{uuid.uuid4()}.{ext}"
-    return os.path.join('profile_pictures/', filename)
+    return os.path.join("profile_pictures/", filename)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -111,3 +111,11 @@ class Profile(models.Model):
     
     def __str__(self):
         return f"{self.user.username}'s profile"
+    
+class Friend(models.Model):
+    user = models.ForeignKey(User, related_name="friends", on_delete=models.CASCADE)
+    friend = models.ForeignKey(User, related_name="user_friends", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "friend")

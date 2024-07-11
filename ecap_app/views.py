@@ -446,17 +446,17 @@ def messages(request, conversation_id):
     """
     user = request.user
     messages, other_chats = [], []
-    other_user_username = ""
+    other_user = None
     chats = Chat.objects.filter((Q(user1=user) | Q(user2=user)))
     if chats:
         chat = chats.filter(Q(id=conversation_id)).first()
         other_chats = chats.exclude(id=conversation_id)
         messages = chat.messages.order_by("timestamp")
-        other_user_username = chat.user1.username if chat.user1 != user else chat.user2.username
+        other_user = chat.user1 if chat.user1 != user else chat.user2
     return render(request, "messages.html", context={
         "chat": chat, 
         "messages":messages, 
-        "other_user":other_user_username,
+        "other_user":other_user,
         "other_chats":other_chats,
         "active_menu": "general_messages"
     })
@@ -477,19 +477,30 @@ def general_messages(request):
     """
     user = request.user
     messages, other_chats = [], []
-    other_user_username = ""
+    other_user = None
     chat = None
     chats = Chat.objects.filter((Q(user1=user) | Q(user2=user)))
-    if chats:
+    users = User.objects.exclude(id=user.id)
+
+    if request.method == "POST":
+        user_id = request.POST.get("user_id")
+        other_user = User.objects.get(id=user_id)
+        chat = Chat.objects.filter(user1=user, user2=other_user).first() or \
+               Chat.objects.filter(user1=other_user, user2=user).first()
+        if not chat:
+            chat = Chat.objects.create(user1=user, user2=other_user)
+
+    if chats.exists(): #added .exists()
         chat = chats.first()
         other_chats = chats.exclude(id=chat.id)
         messages = chat.messages.order_by("timestamp")
-        other_user_username = chat.user1.username if chat.user1 != user else chat.user2.username
+        other_user = chat.user1 if chat.user1 != user else chat.user2
     return render(request, "messages.html", context={
         "chat": chat, 
-        "messages":messages, 
-        "other_user": other_user_username,
-        "other_chats":other_chats,
+        "messages": messages, 
+        "other_user": other_user,
+        "other_chats": other_chats,
+        "users": users,
         "active_menu": "general_messages"
     })
 
@@ -702,3 +713,27 @@ def delete_selected_saving_goals(request):
         if selected_items:
             SavingGoal.objects.filter(id__in=selected_items).delete()
     return redirect("saving_goal_view")
+
+@login_required
+def user_list(request):
+    users = User.objects.exclude(id=request.user.id)
+    return JsonResponse([{"id": u.id, "username": u.username} for u in users], safe=False)
+
+@login_required
+def start_chat(request, user_id):
+    other_user = User.objects.filter(id=user_id)
+    existing_chat = Chat.objects.filter(user1 = request.user, user2=other_user).first() | Chat.objects.filter(user2 = request.user, user1=other_user).first()
+    if existing_chat:
+        return redirect("messages", conversation_id=existing_chat.id)
+    new_chat = Chat.objects.create(user1=request.user, user2=other_user)
+    return redirect("messages", conversation_id=new_chat.id)
+
+
+@login_required
+def compare(request):
+    user = request.user 
+    user_data = gather_comparison_data(user)
+    friends = user.friends.all()
+    friends_data = [gather_friend_data(friend) for friend in friends]
+    context = {"user": user_data, "friends": friends_data, "active_menu": "comparison"}
+    return render(request, "compare.html", context=context)

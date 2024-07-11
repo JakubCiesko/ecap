@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from sklearn.linear_model import LinearRegression
-from .models import Expense, Income, Report, SavingGoal
+from .models import Expense, Income, Report, SavingGoal, Friend
 from django.contrib.auth.models import User
-from django.db.models import Max, Min, Avg
+from django.db.models import Max, Min, Avg, Sum
+from django.db.models.functions import TruncMonth
 from django.http import HttpRequest
 from typing import List, Callable, Tuple
 
@@ -673,3 +674,47 @@ def get_saving_goal_context(request: HttpRequest) -> dict:
     "active_menu": "saving_goals"
     }
     
+def calculate_average_monthly_amount(user_filtered_object):
+    monthly_filtered_objects = user_filtered_object.annotate(month=TruncMonth("date")).values("month").annotate(total_income=Sum("amount")).order_by("month")
+    total = sum(entry['total_income'] for entry in monthly_filtered_objects)
+    number_of_months = len(monthly_filtered_objects)
+    average_monthly_amount = total / number_of_months if number_of_months > 0 else 0
+    return average_monthly_amount
+
+def calculate_monthly_income(user:User):
+    return calculate_average_monthly_amount(Income.objects.filter(user=user))
+
+def calculate_monthly_expense(user:User):
+    return calculate_average_monthly_amount(Expense.objects.filter(user=user))
+
+def calculate_monthly_balance(user:User) -> float: #actually numpy.float64
+    #AVG(Income - Expense) = AVG(Income) - AVG(Expense)
+    monthly_income = calculate_monthly_income(user)
+    monthly_expense = calculate_monthly_expense(user)
+    return monthly_income - monthly_expense
+
+
+def calculate_saving_goal_progress(user: User) -> float:
+    saving_goals = SavingGoal.objects.filter(user=user).values("current_amount", "target_amount")
+    if saving_goals.exists():
+        saving_goals = pd.DataFrame(list(saving_goals), columns=("current_amount", "target_amount"))
+        return round((saving_goals["current_amount"]/saving_goals["target_amount"]).mean(),2)
+    return 0
+    
+
+def gather_comparison_data(user: User) -> dict:
+    return {
+        "total_income":calculate_total_user_income(user),
+        "total_expense":calculate_total_user_expenses(user),
+        "total_balance":calculate_total_user_balance(user),
+        "monthly_income":calculate_monthly_income(user), 
+        "monthly_expense":calculate_monthly_expense(user),
+        "saving_goal_progress": calculate_saving_goal_progress(user),
+        "picture_url": user.profile.profile_picture.url if user.profile.profile_picture else "/static/img/default_user.jpg"
+    }
+
+def gather_friend_data(friend: Friend) -> dict:
+    friend_data = gather_comparison_data(friend.friend)
+    friend_data["username"] = friend.friend.username
+    friend_data["picture_url"] = friend.friend.profile.profile_picture.url if friend.friend.profile.profile_picture else "/static/img/default_user.jpg"
+    return friend_data
