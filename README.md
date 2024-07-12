@@ -49,12 +49,12 @@ To run Ecap locally or on your server, follow these steps:
 
 ## Screenshots of the app
 
-![Dashboard](/screenshots/dashboard.png)
+![Dashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/dashboard.png)
 *Dashboard view in Ecap showing summary of expenses and incomes.*
 
-![Expense1](/screenshots/expense1.png)
-![Expense2](/screenshots/expense2.png)
-![Expense3](/screenshots/expense3.png)
+![Expense1](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense1.png)
+![Expense2](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense2.png)
+![Expense3](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense3.png)
 *Expense view in Ecap showing summary of expenses. Expenses can be added, modified and deleted by the user*
 
 
