@@ -48,17 +48,33 @@ To run Ecap locally or on your server, follow these steps:
    python manage.py runserver
 
 ## Screenshots of the app
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/sign_in_index.gif" alt="SignInDashboard" width="600"/>
+  <br>
+  <em>Sign In and Dashboard view showing summary of expenses and incomes, and all the related statistics.</em>
+</p>
 
-![Dashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/dashboard.png)
-*Dashboard view in Ecap showing summary of expenses and incomes.*
-![SignInDashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/sign_in_index.gif)
-*Sign In and Dashboard view*
-![IncomeExpenseView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/income_expense.gif)
-*Income and Expense views showing summary of expenses and incomes*
-![SavingGoalView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/saving_goal_view.gif)
-*Saving Goal View showing summary of Saving Goals. Saving Goals can be set and deleted by the user. Their progresses is displayed using doughnut charts.*
-![ChatView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/chat.png)
-![CompareView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/compare_view.gif)
-*You can also connect with others via chat or comparison with your friends.*
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/income_expense.gif" alt="IncomeExpenseView" width="600"/>
+  <br>
+  <em>Income and Expense views showing summary of expenses and incomes.</em>
+</p>
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/saving_goal_view.gif" alt="SavingGoalView" width="600"/>
+  <br>
+  <em>Saving Goal View showing summary of Saving Goals. Saving Goals can be set and deleted by the user. Their progress is displayed using doughnut charts.</em>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/chat.png" alt="ChatView" width="600"/>
+  <br>
+  <em>You can also connect with others via chat.</em>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/compare_view.gif" alt="CompareView" width="600"/>
+  <br>
+  <em>Comparison with your friends.</em>
+</p>
 
