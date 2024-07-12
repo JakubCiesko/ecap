@@ -83,6 +83,9 @@ To run Ecap locally or on your server, follow these steps:
 <p align="center">
   <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/compare_view.gif" alt="CompareView" width="600"/>
   <br>
+  <img src="https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/compare.png" alt="CompareView" width="600"/>
+   
+   <br>
   <em>Comparison with your friends.</em>
 </p>
 
