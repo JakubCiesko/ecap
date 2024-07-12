@@ -52,6 +52,9 @@ To run Ecap locally or on your server, follow these steps:
 ![Dashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/dashboard.png)
 *Dashboard view in Ecap showing summary of expenses and incomes.*
 
+![SignInDashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/sign_in_index.gif)
+*Sign In and Dashboard view.*
+
 ![Expense1](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense1.png)
 ![Expense2](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense2.png)
 ![Expense3](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense3.png)
