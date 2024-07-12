@@ -44,4 +44,7 @@ urlpatterns = [
     path("delete_selected_saving_goals/", views.delete_selected_saving_goals, name="delete_selected_saving_goals"),
     path("start_chat/<str:user_id>/", views.start_chat, name="start_chat"),
     path("user_list/", views.user_list, name="user_list"),
+    path("send_friend_request/", views.send_friend_request, name="send_friend_request"),
+    path("accept_friend_request/<str:friend_request_id>", views.accept_friend_request, name="accept_friend_request"),
+    path("reject_friend_request/<str:friend_request_id>", views.reject_friend_request, name="reject_friend_request"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

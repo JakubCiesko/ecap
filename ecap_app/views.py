@@ -15,7 +15,7 @@ from transformers import pipeline
 
 print("Loading model")
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
-model = lambda x: x#pipeline("text2text-generation", model=checkpoint)
+model = pipeline("text2text-generation", model=checkpoint)
 print("Everything loaded, ask away!")
 
 def generate_response(prompt: str) -> str:
@@ -336,7 +336,7 @@ def print_report(request, report_id):
     report = get_object_or_404(Report, pk=report_id)
     if report.user.id == user.id:
         context = {
-        "report": report,
+        "report": report,   #add charts?
         }
         return render(request, "report_template.html", context=context)
     return HttpResponse(status=403)
@@ -378,7 +378,7 @@ def chat_list(request):
     user_id = user.id
     default_profile_picture_url = static("img/default_user.jpg")
     pick_different_user = lambda chat: chat.user1.id == user_id  
-    get_profilepic_url = lambda user: user.profile.profile_picture.url if hasattr(user, "profile") else default_profile_picture_url
+    get_profilepic_url = lambda user: user.profile.profile_picture.url if hasattr(user, "profile") and user.profile.profile_picture and user.profile.profile_picture.name  else default_profile_picture_url
     chats = [{
         "chat_id": chat.id, 
         "user1": chat.user1.username, 
@@ -716,11 +716,30 @@ def delete_selected_saving_goals(request):
 
 @login_required
 def user_list(request):
+    """
+    View that returns a JSON response containing a list of all users except the current user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing a list of users with their IDs and usernames, excluding the current user.
+    """
     users = User.objects.exclude(id=request.user.id)
     return JsonResponse([{"id": u.id, "username": u.username} for u in users], safe=False)
 
 @login_required
 def start_chat(request, user_id):
+    """
+    View that starts a chat with another user or redirects to an existing chat if one already exists.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        user_id (int): The ID of the other user to start a chat with.
+
+    Returns:
+        HttpResponseRedirect: A redirect to the messages view with the conversation ID of the existing or new chat.
+    """
     other_user = User.objects.filter(id=user_id)
     existing_chat = Chat.objects.filter(user1 = request.user, user2=other_user).first() | Chat.objects.filter(user2 = request.user, user1=other_user).first()
     if existing_chat:
@@ -728,12 +747,82 @@ def start_chat(request, user_id):
     new_chat = Chat.objects.create(user1=request.user, user2=other_user)
     return redirect("messages", conversation_id=new_chat.id)
 
-
 @login_required
 def compare(request):
+    """
+    View that compares the current user with their friends and renders the comparison page.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered comparison page with the user and friends' data.
+    """
     user = request.user 
     user_data = gather_comparison_data(user)
-    friends = user.friends.all()
+    friend_relations = Friend.objects.filter((Q(user=user) | Q(friend=user)), status="accepted")#user.friends.all()
+    friends = [
+        friend_relation.friend if friend_relation.user == user else friend_relation.user
+        for friend_relation in friend_relations
+    ]
     friends_data = [gather_friend_data(friend) for friend in friends]
-    context = {"user": user_data, "friends": friends_data, "active_menu": "comparison"}
+    other_users = User.objects.exclude(id=request.user.id)
+    friend_requests = Friend.objects.filter(friend=request.user, status="pending")
+    context = {
+        "user_data": user_data, 
+        "friends": friends_data, 
+        "friend_requests": friend_requests,
+        "other_users": other_users,
+        "active_menu": "comparison"
+    }
     return render(request, "compare.html", context=context)
+
+@login_required
+def send_friend_request(request):
+    """
+    View to handle sending a friend request.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered comparison page with the user and friends' data.
+    """
+    if request.method == "POST":
+        user_id = request.POST.get('user_id')
+        user = get_object_or_404(User, id=user_id)
+        Friend.objects.get_or_create(user=request.user, friend=user, status='pending')
+        #created? if not... already exists
+    return redirect("comparison") 
+
+@login_required
+def accept_friend_request(request, friend_request_id):
+    """
+    View to handle accepting a friend request.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered comparison page with the user and friends' data.
+    """
+    friend_request = get_object_or_404(Friend, id=friend_request_id, friend=request.user)
+    friend_request.status = "accepted"
+    friend_request.save()
+    return redirect("comparison")
+
+@login_required
+def reject_friend_request(request, friend_request_id):
+    """
+    View to handle rejecting a friend request.
+    
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered comparison page with the user and friends' data.
+    """
+    friend_request = get_object_or_404(Friend, id=friend_request_id, friend=request.user)
+    friend_request.status = "rejected"
+    friend_request.save()
+    return redirect("comparison")

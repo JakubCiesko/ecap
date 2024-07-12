@@ -17,87 +17,89 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                        <div class="bg-light rounded p-4">
-                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner" id="carousel-inner">
-                                    {% for goal in data %}
-                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-lg-6">
-                                                        <h5 class="card-title">{{ goal.name }}</h5>
-                                                        <p class="card-text">Target Date: {{ goal.target_date }}</p>
-                                                        <p class="card-text">Remaining Days: {{ goal.remaining_days}}</p>
-                                                        <p class="card-text">Current Amount: €{{ goal.current_amount }}</p>
-                                                        <p class="card-text">Target Amount: €{{ goal.target_amount }}</p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <div class="chart-container" style="position: relative; height: 200px; width: 200px;">
-                                                            <canvas id="doughnutChart{{ goal.id }}"></canvas>
+                    {% if data %}
+                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                            <div class="bg-light rounded p-4">
+                                <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner" id="carousel-inner">
+                                        {% for goal in data %}
+                                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-lg-6">
+                                                            <h5 class="card-title">{{ goal.name }}</h5>
+                                                            <p class="card-text">Target Date: {{ goal.target_date }}</p>
+                                                            <p class="card-text">Remaining Days: {{ goal.remaining_days}}</p>
+                                                            <p class="card-text">Current Amount: €{{ goal.current_amount }}</p>
+                                                            <p class="card-text">Target Amount: €{{ goal.target_amount }}</p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <div class="chart-container" style="position: relative; height: 200px; width: 200px;">
+                                                                <canvas id="doughnutChart{{ goal.id }}"></canvas>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <script>
-                                                    document.addEventListener('DOMContentLoaded', function () {
-                                                        var ctx = document.getElementById('doughnutChart{{ goal.id }}').getContext('2d');
-                                                        var doughnutChart = new Chart(ctx, {
-                                                            type: 'doughnut',
-                                                            data: {
-                                                                labels: ['Completed', 'Remaining'],
-                                                                datasets: [{
-                                                                    label: 'Progress',
-                                                                    data: [{{ goal.percentage|default:0}}, 100 - {{  goal.percentage|default:0 }}],
-                                                                    backgroundColor: [
-                                                                        'rgba(75, 192, 192, 0.5)',
-                                                                        'rgba(255, 99, 132, 0.5)'
-                                                                    ],
-                                                                    borderColor: [
-                                                                        'rgba(75, 192, 192, 1)',
-                                                                        'rgba(255, 99, 132, 1)'
-                                                                    ],
-                                                                    borderWidth: 1
-                                                                }]
-                                                            },
-                                                            options: {
-                                                                responsive: true,
-                                                                maintainAspectRatio: false,
-                                                                plugins: {
-                                                                    legend: {
-                                                                        position: 'top',
-                                                                    },
-                                                                    tooltip: {
-                                                                        callbacks: {
-                                                                            label: function (tooltipItem) {
-                                                                                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', function () {
+                                                            var ctx = document.getElementById('doughnutChart{{ goal.id }}').getContext('2d');
+                                                            var doughnutChart = new Chart(ctx, {
+                                                                type: 'doughnut',
+                                                                data: {
+                                                                    labels: ['Completed', 'Remaining'],
+                                                                    datasets: [{
+                                                                        label: 'Progress',
+                                                                        data: [{{ goal.percentage|default:0}}, 100 - {{  goal.percentage|default:0 }}],
+                                                                        backgroundColor: [
+                                                                            'rgba(75, 192, 192, 0.5)',
+                                                                            'rgba(255, 99, 132, 0.5)'
+                                                                        ],
+                                                                        borderColor: [
+                                                                            'rgba(75, 192, 192, 1)',
+                                                                            'rgba(255, 99, 132, 1)'
+                                                                        ],
+                                                                        borderWidth: 1
+                                                                    }]
+                                                                },
+                                                                options: {
+                                                                    responsive: true,
+                                                                    maintainAspectRatio: false,
+                                                                    plugins: {
+                                                                        legend: {
+                                                                            position: 'top',
+                                                                        },
+                                                                        tooltip: {
+                                                                            callbacks: {
+                                                                                label: function (tooltipItem) {
+                                                                                    return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                                                                }
                                                                             }
                                                                         }
                                                                     }
                                                                 }
-                                                            }
+                                                            });
                                                         });
-                                                    });
-                                                </script>
-                                                
+                                                    </script>
+                                                    
+                                                </div>
                                             </div>
                                         </div>
+                                        {% endfor %}
                                     </div>
-                                    {% endfor %}
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
                                 </div>
-                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
-                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Previous</span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
-                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Next</span>
-                                </button>
+                                
+                                
                             </div>
-                            
-                            
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="container-fluid pt-4 px-4">

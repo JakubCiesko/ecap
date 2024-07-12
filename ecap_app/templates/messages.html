@@ -27,7 +27,7 @@
                             {% endfor %}
                         </ul>
                     </div>
-                    <div class="something">
+                    <div class="formContainer">
                         <button id="toggle-form-btn" class="btn btn-secondary">Start New Chat</button>
                         <form id="start-chat-form" method="POST" action="{% url 'general_messages' %}" style="display: none;">
                             {% csrf_token %}

@@ -1,19 +1,64 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}ECAP - Personal Budget Tracker{% endblock %}
+{% block title %}ECAP | Comparison{% endblock %}
 
 {% block content %}
         {% include "sidebar.html" %} 
-        <!-- Content Start 
-        "total_income":calculate_total_user_income(user),
-        "total_expense":calculate_total_user_expenses(user),
-        "total_balance":calculate_total_user_balance(user),
-        "monthly_income":calculate_monthly_income(user), 
-        "monthly_expense":calculate_monthly_expense(user),
-        "saving_goal_progress": calculate_saving_goal_progress(user)-->
-    
         <div class="content">
             {% include "navbar.html" %}
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                        <div class="bg-light rounded p-4">
+                            <div class="formContainer">
+                                <div class="row g-4">
+                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                        <h5>Friend Requests</h5>
+                                    </div>
+                                </div>
+                                {% for friend_request in friend_requests %}
+                                <div>
+                                    <span>{{ friend_request.user.username }}</span>
+                                    <a href="{% url 'accept_friend_request' friend_request.id %}" class="btn btn-success">Accept</a>
+                                    <a href="{% url 'reject_friend_request' friend_request.id %}" class="btn btn-danger">Reject</a>
+                                </div>
+                                {% empty %}
+                                    <p>No friend requests.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                        <div class="bg-light rounded p-4">
+                            <div class="formContainer">
+                                <div class="row g-4">
+                                    <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
+                                        <button id="toggle-form-btn" class="btn btn-md btn-primary">Send Friend Request</button>
+                                    </div>
+                                    <div class="col-sm-12 col-md-8 col-lg-8 col-xl-8">
+                                        <form id="find-friends-form" method="POST" action="{% url 'send_friend_request' %}" style="display: none;">
+                                            {% csrf_token %}
+                                            <div class="input-group mt-2">
+                                                <select class="form-select" name="user_id">
+                                                    <option value="" selected disabled>Pick a user to become friends with</option>
+                                                    {% for user in other_users %}
+                                                        <option value="{{ user.id }}">{{ user.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button class="btn btn-primary" type="submit">Send Friend Request</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
             <div class="container-fluid pt-4 px-4">
                 <div class="row g-4">
                     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
@@ -29,16 +74,16 @@
                                                     <div class="card mb-4">
                                                         <div class="card-body">
                                                             <div class="d-flex align-items-center  mb-4">
-                                                                <img class="rounded-circle me-lg-2" src="{{user.picture_url}}" alt="{{user.username}}" style="width: 40px; height: 40px;">
+                                                                <img class="rounded-circle me-lg-2" src="{{user_data.picture_url}}" alt="{{user_data.username}}" style="width: 40px; height: 40px;">
                                                                 <h3 class="mb-0 user-message">Your data</h3>
                                                             </div>
                                                             
-                                                            <p><strong>Total Income:</strong> {{ user.total_income }} €</p>
-                                                            <p><strong>Total Expense:</strong> {{ user.total_expense }} €</p>
-                                                            <p><strong>Total Balance:</strong> {{ user.total_balance }} €</p>
-                                                            <p><strong>Monthly Income:</strong> {{ user.monthly_income }} €</p>
-                                                            <p><strong>Monthly Expense:</strong> {{ user.monthly_expense }} €</p>
-                                                            <p><strong>Savings Goal Progress:</strong> {{ user.saving_goal_progress }}%</p>
+                                                            <p><strong>Total Income:</strong> {{ user_data.total_income }} €</p>
+                                                            <p><strong>Total Expense:</strong> {{ user_data.total_expense }} €</p>
+                                                            <p><strong>Total Balance:</strong> {{ user_data.total_balance }} €</p>
+                                                            <p><strong>Monthly Income:</strong> {{ user_data.monthly_income }} €</p>
+                                                            <p><strong>Monthly Expense:</strong> {{ user_data.monthly_expense }} €</p>
+                                                            <p><strong>Savings Goal Progress:</strong> {{ user_data.saving_goal_progress }}%</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -92,8 +137,18 @@
 {% block extraJs %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const toggleFormButton = document.getElementById('toggle-form-btn');
+        const findFriendsForm = document.getElementById('find-friends-form');
+
+        toggleFormButton.addEventListener('click', () => {
+            if (findFriendsForm.style.display === 'none') {
+                findFriendsForm.style.display = 'block';
+            } else {
+                findFriendsForm.style.display = 'none';
+            }
+        });
         {% for friend in friends %}
-        console.log("{{friend.total_income }}")
+       
         var ctx = document.getElementById('friendChart{{ forloop.counter }}').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
@@ -101,7 +156,7 @@
                 labels: ['Total Income', 'Total Expense', 'Total Balance', 'Monthly Income', 'Monthly Expense', 'Savings Goal Progress'],
                 datasets: [{
                     label: 'Your data',
-                    data: [{{ user.total_income }}, {{ user.total_expense }}, {{ user.total_balance }}, {{ user.monthly_income }}, {{ user.monthly_expense }}, {{user.saving_goal_progress }}],
+                    data: [{{ user_data.total_income }}, {{ user_data.total_expense }}, {{ user_data.total_balance }}, {{ user_data.monthly_income }}, {{ user_data.monthly_expense }}, {{user_data.saving_goal_progress }}],
                     backgroundColor: 'rgba(75, 192, 192, 0.5)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1,

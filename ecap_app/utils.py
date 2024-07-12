@@ -714,7 +714,7 @@ def gather_comparison_data(user: User) -> dict:
     }
 
 def gather_friend_data(friend: Friend) -> dict:
-    friend_data = gather_comparison_data(friend.friend)
-    friend_data["username"] = friend.friend.username
-    friend_data["picture_url"] = friend.friend.profile.profile_picture.url if friend.friend.profile.profile_picture else "/static/img/default_user.jpg"
+    friend_data = gather_comparison_data(friend)
+    friend_data["username"] = friend.username
+    friend_data["picture_url"] = friend.profile.profile_picture.url if friend.profile.profile_picture else "/static/img/default_user.jpg"
     return friend_data

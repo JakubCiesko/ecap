@@ -29,9 +29,15 @@ environ.Env.read_env()
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'www.ecap.com',
+    'ecap.com',
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+]
 
 
 # Application definition
@@ -138,3 +144,13 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+# SSL/HTTPS settings
+SECURE_HSTS_SECONDS = 0 #60 #31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS')
+SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD')
+SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT')
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE')
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE')
+
