@@ -51,16 +51,14 @@ To run Ecap locally or on your server, follow these steps:
 
 ![Dashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/dashboard.png)
 *Dashboard view in Ecap showing summary of expenses and incomes.*
-
 ![SignInDashboard](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/sign_in_index.gif)
-*Sign In and Dashboard view.*
+*Sign In and Dashboard view*
+![IncomeExpenseView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/income_expense.gif)
+*Income and Expense views showing summary of expenses and incomes*
+![SavingGoalView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/saving_goal_view.gif)
+*Saving Goal View showing summary of Saving Goals. Saving Goals can be set and deleted by the user. Their progresses is displayed using doughnut charts.*
+![ChatView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/chat.png)
+![CompareView](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots/compare_view.gif)
+*You can also connect with others via chat or comparison with your friends.*
 
-![Expense1](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense1.png)
-![Expense2](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense2.png)
-![Expense3](https://raw.githubusercontent.com/JakubCiesko/ecap/docs-assets/screenshots//expense3.png)
-*Expense view in Ecap showing summary of expenses. Expenses can be added, modified and deleted by the user*
-
-
-![SavingGoal](/screenshots/saving_goal.png)
-*Saving Goal view in Ecap showing summary of Saving Goals. Saving Goals can be set and deleted by the user. Their progresses is displayed using doughnut charts.*
 
