@@ -3,6 +3,7 @@ import os
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db import models
+from django.templatetags.static import static
 
 
 class Product(models.Model):
@@ -107,7 +108,12 @@ def get_profile_picture_filepath(instance, filename):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to=get_profile_picture_filepath, blank=True, null=True)
+    profile_picture = models.ImageField(
+        upload_to=get_profile_picture_filepath, 
+        blank=False, 
+        null=False,
+        default="profile_pictures/default_user.jpg"
+    )
     
     def __str__(self):
         return f"{self.user.username}'s profile"
@@ -118,6 +124,9 @@ class Friend(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=[("pending", "Pending"), ("accepted", "Accepted"), ("rejected", "Rejected")], default="pending")
 
+    def __str__(self):
+        return f"{self.user} - {self.friend} ({self.status})"
+    
     class Meta:
         unique_together = ("user", "friend")
 

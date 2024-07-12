@@ -27,15 +27,15 @@
                                             <div class="card">
                                                 <div class="card-body">
                                                     <div class="row">
-                                                        <div class="col-lg-6">
+                                                        <div class="col-lg-4">
                                                             <h5 class="card-title">{{ goal.name }}</h5>
                                                             <p class="card-text">Target Date: {{ goal.target_date }}</p>
                                                             <p class="card-text">Remaining Days: {{ goal.remaining_days}}</p>
                                                             <p class="card-text">Current Amount: €{{ goal.current_amount }}</p>
                                                             <p class="card-text">Target Amount: €{{ goal.target_amount }}</p>
                                                         </div>
-                                                        <div class="col-lg-6">
-                                                            <div class="chart-container" style="position: relative; height: 200px; width: 200px;">
+                                                        <div class="col-lg-8">
+                                                            <div class="chart-container" style="position: relative;">
                                                                 <canvas id="doughnutChart{{ goal.id }}"></canvas>
                                                             </div>
                                                         </div>

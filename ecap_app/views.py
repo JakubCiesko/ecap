@@ -4,6 +4,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
+from django.db import IntegrityError
 from django.db.models import Q
 from django.templatetags.static import static
 from datetime import datetime
@@ -790,9 +791,20 @@ def send_friend_request(request):
     """
     if request.method == "POST":
         user_id = request.POST.get('user_id')
-        user = get_object_or_404(User, id=user_id)
-        Friend.objects.get_or_create(user=request.user, friend=user, status='pending')
-        #created? if not... already exists
+        to_user = get_object_or_404(User, id=user_id)
+        from_user = get_object_or_404(User, id=request.user.id)
+        if to_user == from_user:
+            return redirect("comparison")
+        friend_relationship_exists = Friend.objects.filter(
+            Q(user=from_user, friend=to_user) | Q(user=to_user, friend=from_user)
+        ).exists()
+        if friend_relationship_exists:
+            return redirect("comparison")
+        try:    #create friend request
+            friend = Friend.objects.create(user=from_user, friend=to_user, status="pending")
+            friend.save()
+        except IntegrityError:
+            pass #There already exists friendship relationship
     return redirect("comparison") 
 
 @login_required

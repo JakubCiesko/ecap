@@ -27,20 +27,33 @@
                             {% endfor %}
                         </ul>
                     </div>
-                    <div class="formContainer">
-                        <button id="toggle-form-btn" class="btn btn-secondary">Start New Chat</button>
-                        <form id="start-chat-form" method="POST" action="{% url 'general_messages' %}" style="display: none;">
-                            {% csrf_token %}
-                            <div class="input-group mt-2">
-                                <select class="form-select" name="user_id">
-                                    <option value="" selected disabled>Pick a user to chat with</option>
-                                    {% for user in users %}
-                                        <option value="{{ user.id }}">{{ user.username }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button class="btn btn-primary" type="submit">Start Chat</button>
+
+                    <div class="row g-4">
+                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                            <div class="bg-light rounded p-4">
+                                <div class="formContainer">
+                                    <div class="row g-4">
+                                        <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
+                                            <button id="toggle-form-btn" class="btn btn-md btn-primary">Start New Chat</button>
+                                        </div>
+                                        <div class="col-sm-12 col-md-8 col-lg-8 col-xl-8">
+                                            <form id="start-chat-form" method="POST" action="{% url 'general_messages' %}" style="display: none;">
+                                                {% csrf_token %}
+                                                <div class="input-group mt-2">
+                                                    <select class="form-select" name="user_id">
+                                                        <option value="" selected disabled>Pick a user to chat with</option>
+                                                        {% for user in users %}
+                                                            <option value="{{ user.id }}">{{ user.username }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <button class="btn btn-primary" type="submit">Start Chat</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>

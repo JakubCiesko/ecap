@@ -674,27 +674,72 @@ def get_saving_goal_context(request: HttpRequest) -> dict:
     "active_menu": "saving_goals"
     }
     
-def calculate_average_monthly_amount(user_filtered_object):
+def calculate_average_monthly_amount(user_filtered_object) -> np.float64:
+    """
+    Calculates the average monthly amount for a given queryset.
+
+    Args:
+        user_filtered_object (QuerySet): A Django queryset filtered by user with a date field and an amount field.
+
+    Returns:
+        np.float64: The average monthly amount calculated from the queryset.
+    """
     monthly_filtered_objects = user_filtered_object.annotate(month=TruncMonth("date")).values("month").annotate(total_income=Sum("amount")).order_by("month")
     total = sum(entry['total_income'] for entry in monthly_filtered_objects)
     number_of_months = len(monthly_filtered_objects)
     average_monthly_amount = total / number_of_months if number_of_months > 0 else 0
     return average_monthly_amount
 
-def calculate_monthly_income(user:User):
+def calculate_monthly_income(user:User) -> np.float64:
+    """
+    Calculates the average monthly income for a specific user.
+
+    Args:
+        user (User): The user object for whom the average monthly income is to be calculated.
+
+    Returns:
+        np.float64: The average monthly income for the user.
+    """
     return calculate_average_monthly_amount(Income.objects.filter(user=user))
 
-def calculate_monthly_expense(user:User):
+def calculate_monthly_expense(user:User) -> np.float64:
+    """
+    Calculates the average monthly expense for a specific user.
+
+    Args:
+        user (User): The user object for whom the average monthly expense is to be calculated.
+
+    Returns:
+        np.float64: The average monthly expense for the user.
+    """
     return calculate_average_monthly_amount(Expense.objects.filter(user=user))
 
-def calculate_monthly_balance(user:User) -> float: #actually numpy.float64
+def calculate_monthly_balance(user:User) -> np.float64: 
+    """
+    Calculates the average monthly balance for a specific user by subtracting
+    the average monthly expense from the average monthly income.
+
+    Args:
+        user (User): The user object for whom the average monthly balance is to be calculated.
+
+    Returns:
+        np.float64: The average monthly balance for the user.
+    """
     #AVG(Income - Expense) = AVG(Income) - AVG(Expense)
     monthly_income = calculate_monthly_income(user)
     monthly_expense = calculate_monthly_expense(user)
     return monthly_income - monthly_expense
 
-
 def calculate_saving_goal_progress(user: User) -> float:
+    """
+    Calculates the average progress towards the saving goals for a specific user.
+
+    Args:
+        user (User): The user object for whom the saving goal progress is to be calculated.
+
+    Returns:
+        float: The percentage of the target amount that has been achieved, rounded to two decimal places.
+    """
     saving_goals = SavingGoal.objects.filter(user=user).values("current_amount", "target_amount")
     if saving_goals.exists():
         saving_goals = pd.DataFrame(list(saving_goals), columns=("current_amount", "target_amount"))
@@ -703,6 +748,22 @@ def calculate_saving_goal_progress(user: User) -> float:
     
 
 def gather_comparison_data(user: User) -> dict:
+    """
+    Gathers comparison data for a specific user.
+
+    Args:
+        user (User): The user object for whom the comparison data is to be gathered.
+
+    Returns:
+        dict: A dictionary containing various financial and profile information for the user, including:
+            - "total_income": Total income of the user.
+            - "total_expense": Total expenses of the user.
+            - "total_balance": Total balance of the user.
+            - "monthly_income": Average monthly income of the user.
+            - "monthly_expense": Average monthly expenses of the user.
+            - "saving_goal_progress": Progress towards the user's saving goals as a percentage.
+            - "picture_url": URL of the user's profile picture, or a default image if no picture is set.
+    """
     return {
         "total_income":calculate_total_user_income(user),
         "total_expense":calculate_total_user_expenses(user),
@@ -714,6 +775,18 @@ def gather_comparison_data(user: User) -> dict:
     }
 
 def gather_friend_data(friend: Friend) -> dict:
+    """
+    Gathers comparison data for a specific friend, including additional profile information.
+
+    Args:
+        friend (Friend): The friend object for whom the data is to be gathered.
+
+    Returns:
+        dict: A dictionary containing financial and profile information for the friend, including:
+            - All data gathered by `gather_comparison_data`.
+            - "username": The username of the friend.
+            - "picture_url": URL of the friend's profile picture, or a default image if no picture is set.
+    """
     friend_data = gather_comparison_data(friend)
     friend_data["username"] = friend.username
     friend_data["picture_url"] = friend.profile.profile_picture.url if friend.profile.profile_picture else "/static/img/default_user.jpg"
