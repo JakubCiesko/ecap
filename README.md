@@ -14,7 +14,7 @@ Ecap is a web application built using Django that serves as a personal budget tr
 
 ## Additional Features
 
-1. **Chat with LLM**: Interact with a language model (LLM) within the application for additional support and functionality, as illustrated in the "SignInDashboard" GIF.
+1. **Chat with LLM**: Interact with a language model (LLM) within the application for additional support and functionality, as illustrated in the Sign-In & Dashboard GIF.
 2. **Chat with Other Users**: Communicate with other users through a basic messaging feature.
 3. **User Comparison**: Compare your incomes, expenses, saving goal progress, and monthly income/expense with other users who accept your friend request. This feature is designed with privacy in mind.
 4. **Categorized Financial Tracking**: View and track your expenses and incomes in user-defined categories, helping you understand where your money is coming from and going.
