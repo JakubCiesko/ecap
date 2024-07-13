@@ -16,7 +16,7 @@ from .forms import SignUpForm, ExpenseForm, IncomeForm, SavingGoalForm
 
 print("Loading model")
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
-model = lambda x: x# pipeline("text2text-generation", model=checkpoint)
+model = pipeline("text2text-generation", model=checkpoint)
 print("Everything loaded, ask away!")
 
 def generate_response(prompt: str) -> str:
