@@ -11,12 +11,12 @@ from datetime import datetime
 from .models import *
 from .utils import *
 from .forms import SignUpForm, ExpenseForm, IncomeForm, SavingGoalForm
-from transformers import pipeline
+#from transformers import pipeline
 
 
 print("Loading model")
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
-model = pipeline("text2text-generation", model=checkpoint)
+model = lambda x: x# pipeline("text2text-generation", model=checkpoint)
 print("Everything loaded, ask away!")
 
 def generate_response(prompt: str) -> str:
@@ -79,7 +79,8 @@ def index(request):
     Returns:
     HttpResponse: Rendered HTML response for the dashboard page.
     """
-    return render(request, "index.html", context={"active_menu": "dashboard"})
+    context = get_index_context(request)
+    return render(request, "index.html", context=context)
 
 def signup(request):
     if request.method == "POST":
@@ -838,3 +839,78 @@ def reject_friend_request(request, friend_request_id):
     friend_request.status = "rejected"
     friend_request.save()
     return redirect("comparison")
+
+
+@login_required
+def modify_expense(request, expense_id):
+    """
+    View to modify an existing expense.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object.
+    expense_id (int): The ID of the expense to be modified.
+
+    Returns:
+    HttpResponse: The rendered response for the expense modification page.
+    """
+
+    expense = get_object_or_404(Expense, id=expense_id)
+    if request.method == "POST":
+        form = ExpenseForm(request.POST, instance=expense)
+        if form.is_valid():
+            form.save()
+            return redirect("expense")
+    else:
+        form = ExpenseForm(instance=expense)
+    context = get_expense_context(request)
+    context["form"] = form
+    return render(request, "data_input_form.html", context=context)
+
+@login_required
+def modify_income(request, income_id):
+    """
+    View to modify an existing income.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object.
+    income_id (int): The ID of the income to be modified.
+
+    Returns:
+    HttpResponse: The rendered response for the income modification page.
+    """
+    income = get_object_or_404(Income, id=income_id)
+    if request.method == "POST":
+        form = IncomeForm(request.POST, instance=income)
+        if form.is_valid():
+            form.save()
+            return redirect("income")
+    else:
+        form = IncomeForm(instance=income)
+    context = get_income_context(request)
+    context["form"] = form
+    return render(request, "data_input_form.html", context=context)
+
+
+@login_required
+def modify_saving_goal(request, saving_goal_id):
+    """
+    View to modify an existing saving goal.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object.
+    saving_goal_id (int): The ID of the saving goal to be modified.
+
+    Returns:
+    HttpResponse: The rendered response for the saving goal modification page.
+    """
+    saving_goal = get_object_or_404(SavingGoal, id=saving_goal_id)
+    if request.method == "POST":
+        form = SavingGoalForm(request.POST, instance=saving_goal)
+        if form.is_valid():
+            form.save()
+            return redirect("saving_goal_view")
+    else:
+        form = SavingGoalForm(instance=income)
+    context = get_saving_goal_context(request)
+    context["form"] = form
+    return render(request, "saving_goal.html", context=context)

@@ -9,84 +9,53 @@
             <div class="container-fluid pt-4 px-4">
                 <div class="row g-4">
                     <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
-                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                            <object data="{% static 'img/total.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
-                            <div class="ms-3">
-                                <p class="mb-2">Total {{datatitle}}</p>
-                                <h6 class="mb-0"><span>{{data.total}}</span>€</h6>
-                                <p class="mb-2">({{data.today}})</p>
-                            </div>
-                        </div>
+                        {% static 'img/total.svg'  as img_url%}
+                        {% with "Total "|add:datatitle as title %}
+                        {% include "data_card.html" with complex="True" title=title value=data.total unit="€" extra=data.today img_url=img_url%} 
+                        {% endwith %}
                     </div>
                     <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
-                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                            <object data="{% static 'img/avg.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
-                            <div class="ms-3">
-                                <p class="mb-2">Average {{datatitle}}</p>
-                                <h6 class="mb-0"><span>{{data.avg.0}}</span>€</h6>
-                                <p class="mb-2">({{data.avg.1}})</p>
-                            </div>
-                        </div>
+                        {% static 'img/avg.svg'  as img_url%}
+                        {% with "Average "|add:datatitle as title %}
+                        {% include "data_card.html" with complex="True" title=title value=data.avg.0 unit="€" extra=data.avg.1 img_url=img_url%}
+                        {% endwith %}
                     </div>
                     <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
-                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                            <object data="{% static 'img/min.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
-                            <div class="ms-3">
-                                <p class="mb-2">Minimal {{datatitle}}</p>
-                                <h6 class="mb-0"><span>{{data.min.0}}</span>€</h6>
-                                <p class="mb-2">({{data.min.1}})</p>
-                            </div>
-                        </div>
+                        {% static 'img/min.svg'  as img_url%}
+                        {% with "Minimal "|add:datatitle as title %}
+                        {% include "data_card.html" with complex="True" title=title value=data.min.0 unit="€" extra=data.min.1 img_url=img_url%}
+                        {% endwith %}
                     </div>
                     <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
-                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                            <object data="{% static 'img/max.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
-                            <div class="ms-3">
-                                <p class="mb-2">Maximal {{datatitle}}</p>
-                                <h6 class="mb-0"><span>{{data.max.0}}</span>€</h6>
-                                <p class="mb-2">({{data.max.1}})</p>
-                            </div>
-                        </div>
+                        {% static 'img/max.svg'  as img_url%}
+                        {% with "Maximal "|add:datatitle as title %}
+                        {% include "data_card.html" with complex="True" title=title value=data.max.0 unit="€" extra=data.max.1 img_url=img_url%}
+                        {% endwith %}
+                        
                     </div>
                     <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
-                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                            <object data="{% static 'img/std.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
-                            <div class="ms-3">
-                                <p class="mb-2">{{datatitle}} Standard Deviation</p>
-                                <h6 class="mb-0"><span>{{data.std}}</span>€</h6>
-                                <p class="mb-2">({{data.today}})</p>
-                            </div>
-                        </div>
+                        {% static 'img/std.svg'  as img_url%}
+                        {% with datatitle|add:" Standard Deviation" as title %}
+                        {% include "data_card.html" with complex="True" title=title value=data.std unit="€" extra=data.today img_url=img_url%}
+                        {% endwith %}
+                        
                     </div>
                     <div class="col-sm-12 col-md-6 col-lg-6 col-xl-4">
-                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                            <object data="{% static 'img/linreg.svg' %}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
-                            <div class="ms-3">
-                                <p class="mb-2">{{datatitle}} Daily Growth</p>
-                                <h6 class="mb-0"><span>{{data.linear_regression_slope}}</span>€/day</h6>
-                                <p class="mb-2">({{data.today}})</p>
-                            </div>
-                        </div>
+                        {% static 'img/linreg.svg'  as img_url%}
+                        {% with datatitle|add:" Daily Growth" as title %}
+                        {% include "data_card.html" with complex="True" title=title value=data.linear_regression_slope unit="€/day" extra=data.today img_url=img_url%}
+                        {% endwith %}
                     </div>
                 </div>
                 <hr>
                 <div class="row g-4">
                     <div class="col-sm-12 col-md-12 col-xl-12">
-                        <div class="bg-light text-center rounded p-4">
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <h6 class="mb-0">{{datatitle}}</h6>
-                            </div>
-                            <canvas id="chart"></canvas>
-                        </div>
+                        {% include "charts.html" with title=datatitle canvasId="chart"%}
                     </div>
-                
                     <div class="col-sm-12 col-md-12 col-xl-12">
-                        <div class="bg-light text-center rounded p-4">
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <h6 class="mb-0">{{datatitle}} categories</h6>
-                            </div>
-                            <canvas id="doughnutChart" style="max-height:450px;"></canvas>
-                        </div>
+                        {% with datatitle|add:" categories" as title %}
+                        {%include "doughnut_chart.html" with title=title canvasId="doughnutChart"%}
+                        {% endwith %}
                     </div>
                 </div>
                 <br>
@@ -118,7 +87,9 @@
                                                         <td>{{e.amount}}</td>
                                                         <td>{{e.description}}</td>
                                                         <td>{{e.category}}</td>
-                                                        <td><a class="btn btn-sm btn-primary" href="" target="_blank">Modify</a></td>
+                                                        <td class="text-center"><a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modifyModal" data-id="{{ e.id }}" data-date="{{ e.date }}" data-amount="{{ e.amount }}"
+                                                            data-category="{{ e.category }}" data-description="{{ e.description }}"
+                                                            data-is-expense="{{ data.is_expense }}" onclick="openModifyModal(this)">Modify</a></td>
                                                     </tr>
                                                 {% endfor %}
                                             {% endif %}
@@ -163,6 +134,42 @@
             
         </div>
         <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+        <div class="modal fade" id="modifyModal" tabindex="-1" role="dialog" aria-labelledby="modifyModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modifyModalLabel">Modify Entry</h5>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="modifyForm" method="post">
+                            {% csrf_token %}
+                            <div class="form-floating mb-4">
+                                <input type="date" name="date" class="form-control" aria-invalid="true" id="id_date" required>
+                                <label for="floatingInput">Date</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <input type="number" step="0.01" class="form-control" name="amount" placeholder="Amount" required>
+                                <label for="floatingInput">Amount</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <input type="text" class="form-control" name="category" placeholder="Category" required>
+                                <label for="floatingInput">Category</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <input type="text" class="form-control" name="description" placeholder="Description">
+                                <label for="floatingInput">Description</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Modify</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 {% endblock %}
 {% block extraJs %}
 <script>
@@ -280,5 +287,22 @@ document.getElementById('selectAll').addEventListener('change', function() {
             checkbox.checked = this.checked;
         }
     });
+
+    function openModifyModal(button) {
+    let id = button.getAttribute('data-id');
+    let date = button.getAttribute('data-date');
+    let amount = button.getAttribute('data-amount');
+    let category = button.getAttribute('data-category');
+    let description = button.getAttribute('data-description');
+    let isExpense = button.getAttribute('data-is-expense') === 'True';
+
+    document.querySelector('#modifyForm input[name="date"]').value = date;
+    document.querySelector('#modifyForm input[name="amount"]').value = amount;
+    document.querySelector('#modifyForm input[name="category"]').value = category;
+    document.querySelector('#modifyForm input[name="description"]').value = description;
+
+    let form = document.querySelector('#modifyForm');
+    form.action = isExpense ? `/modify/expense/${id}` : `/modify/income/${id}`;
+}
 </script>
 {% endblock %}

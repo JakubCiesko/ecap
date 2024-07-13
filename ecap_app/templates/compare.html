@@ -64,13 +64,13 @@
                     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                         <div class="bg-light rounded p-4">
                             {% if friends %}
-                            <div id="friendComparisonCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div id="friendComparisonCarousel" class="carousel slide" data-bs-ride="carousel">  
                                 <div class="carousel-inner">
                                     {% for friend in friends %}
                                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
                                             <div class="row g-4">
                                                 <!--USER DATA-->
-                                                <div class="col-xl-6 col-lg-6 col-sm-12">
+                                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                     <div class="card mb-4">
                                                         <div class="card-body">
                                                             <div class="d-flex align-items-center  mb-4">
@@ -88,7 +88,7 @@
                                                     </div>
                                                 </div>
                                                 <!--FRIEND DATA-->
-                                                <div class="col-xl-6 col-lg-6 col-sm-12">
+                                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                     <div class="card mb-4">
                                                         <div class="card-body">
                                                             <div class="d-flex align-items-center  mb-4">
@@ -105,10 +105,16 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div class="chart-carousel-container">
                                             <div class="row g-4">
                                                 <div class="col-xl-12 col-lg-12 col-sm-12">
                                                     <canvas id="friendChart{{ forloop.counter }}"></canvas>
                                                 </div>
+                                            
+                                                <div class="col-xl-12 col-lg-12 col-sm-12">
+                                                    <canvas id="friendChartProgress{{ forloop.counter }}"></canvas>
+                                                </div>
+                                            </div>
                                             </div>
                                         </div>
                                     {% endfor %}
@@ -149,86 +155,106 @@
         });
         {% for friend in friends %}
        
-        var ctx = document.getElementById('friendChart{{ forloop.counter }}').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Total Income', 'Total Expense', 'Total Balance', 'Monthly Income', 'Monthly Expense', 'Savings Goal Progress'],
-                datasets: [{
-                    label: 'Your data',
-                    data: [{{ user_data.total_income }}, {{ user_data.total_expense }}, {{ user_data.total_balance }}, {{ user_data.monthly_income }}, {{ user_data.monthly_expense }}, {{user_data.saving_goal_progress }}],
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                    {
-                    label: '{{ friend.username }}',
-                    data: [{{ friend.total_income }}, {{ friend.total_expense }}, {{ friend.total_balance }}, {{ friend.monthly_income }}, {{ friend.monthly_expense }}, {{friend.saving_goal_progress}}],
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                /*{
-                        data: [null, null, null, null, null, {{ friend.saving_goal_progress }}],
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        
-                        data: [null, null, null, null, null, {{ user.saving_goal_progress }}],
+            var ctx = document.getElementById('friendChart{{ forloop.counter }}').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Income', 'Total Expense', 'Total Balance', 'Monthly Income', 'Monthly Expense'],
+                    datasets: [{
+                        label: 'Your data',
+                        data: [{{ user_data.total_income }}, {{ user_data.total_expense }}, {{ user_data.total_balance }}, {{ user_data.monthly_income }}, {{ user_data.monthly_expense }}, {{user_data.saving_goal_progress }}],
                         backgroundColor: 'rgba(75, 192, 192, 0.5)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1,
-                        yAxisID: 'y1'
-                    }*/
-            ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: "Amount (€)"
-                        }
+                        yAxisID: 'y'
                     },
-                    /*y1: {
-                        beginAtZero: false,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Savings Goal Progress'
-                        },
-                        ticks: {
-                            max: 1,
-                            stepSize: 0.1
-                        }
-                    }*/
+                        {
+                        label: '{{ friend.username }}',
+                        data: [{{ friend.total_income }}, {{ friend.total_expense }}, {{ friend.total_balance }}, {{ friend.monthly_income }}, {{ friend.monthly_expense }}, {{friend.saving_goal_progress}}],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                ]
                 },
-                plugins: {
-                    legend: {
-                        position: 'top',
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left',
+                            
+                        },
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function (tooltipItem) {
-                                return tooltipItem.dataset.label + ': €' + tooltipItem.raw.toFixed(2);
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (tooltipItem) {
+                                    return tooltipItem.dataset.label + ': €' + tooltipItem.raw.toFixed(2);
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-        {% endfor %}
-    });
+            });
+            var ctx2 = document.getElementById('friendChartProgress{{ forloop.counter }}').getContext('2d');
+            new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Savings Goal Progress'],
+                            datasets: [
+                                {
+                                    label: 'Your data',
+                                    data: [{{ user_data.saving_goal_progress }}],
+                                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: '{{ friend.username }}',
+                                    data: [{{ friend.saving_goal_progress }}],
+                                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            indexAxis: 'x',
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                },
+                                y: {
+                                    min: 0,
+                                    max: 100,
+                                    step: 10
+                                }
+                                
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (tooltipItem) {
+                                            return tooltipItem.dataset.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+            {% endfor %}
+            });
 </script>
 {% endblock %}

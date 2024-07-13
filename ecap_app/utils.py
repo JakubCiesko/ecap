@@ -743,7 +743,7 @@ def calculate_saving_goal_progress(user: User) -> float:
     saving_goals = SavingGoal.objects.filter(user=user).values("current_amount", "target_amount")
     if saving_goals.exists():
         saving_goals = pd.DataFrame(list(saving_goals), columns=("current_amount", "target_amount"))
-        return round((saving_goals["current_amount"]/saving_goals["target_amount"]).mean(),2)
+        return round((100*saving_goals["current_amount"]/saving_goals["target_amount"]).mean(),2)
     return 0
     
 
@@ -791,3 +791,18 @@ def gather_friend_data(friend: Friend) -> dict:
     friend_data["username"] = friend.username
     friend_data["picture_url"] = friend.profile.profile_picture.url if friend.profile.profile_picture else "/static/img/default_user.jpg"
     return friend_data
+
+
+def get_index_context(request: HttpRequest) -> dict:
+    """
+    Generate the context data for the index view.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing user information.
+
+    Returns:
+    dict: A dictionary containing the context data for the saving goals view.
+    """ 
+    return {
+        "active_menu": "dashboard"
+    }

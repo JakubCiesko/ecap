@@ -1,0 +1,18 @@
+{% if complex %}
+<div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+    <object data="{{img_url}}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+    <div class="ms-3">
+        <p class="mb-2">{{title}}</p>
+        <h6 class="mb-0"><span>{{value}}</span>{{unit}}</h6>
+        <p class="mb-2">({{extra}})</p>
+    </div>
+</div>
+{% else %}
+<div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+    <object data="{{img_url}}" type="image/svg+xml" class="svg-icon" width="48" height="48"></object>
+    <div class="ms-3">
+        <p class="mb-2">{{title}}</p>
+        <h6 class="mb-0"><span id="{{spanId}}">0</span>€</h6>
+    </div>
+</div>
+{% endif %}

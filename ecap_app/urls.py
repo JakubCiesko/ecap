@@ -47,4 +47,7 @@ urlpatterns = [
     path("send_friend_request/", views.send_friend_request, name="send_friend_request"),
     path("accept_friend_request/<str:friend_request_id>", views.accept_friend_request, name="accept_friend_request"),
     path("reject_friend_request/<str:friend_request_id>", views.reject_friend_request, name="reject_friend_request"),
+    path("modify/expense/<str:expense_id>", views.modify_expense, name="modify_expense"),
+    path("modify/income/<str:income_id>", views.modify_income, name="modify_income"),
+    path("modify/saving_goal/<str:saving_goal_id>", views.modify_saving_goal, name="modify_saving_goal"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
