@@ -1,6 +1,6 @@
 # Ecap - Personal Budget Tracker
 
-Ecap is a web application built using Django that serves as a personal budget tracker. It allows users to manage their incomes, expenses, savings goals, and generate financial reports.
+Ecap is a web application built using Django that serves as a personal budget tracker. It allows users to manage their incomes, expenses, savings goals, generate financial reports and share their progress with their friends.
 
 ## Features
 
