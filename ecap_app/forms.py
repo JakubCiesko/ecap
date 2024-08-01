@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Profile, Expense, Income, SavingGoal
 
 class SignUpForm(UserCreationForm):
@@ -57,3 +57,15 @@ class SavingGoalForm(forms.ModelForm):
             "current_amount": forms.NumberInput(attrs={"class": "form-control"}),
             "name": forms.TextInput(attrs={"class": "form-control"}),
         }
+
+
+class UserUpdateForm(UserChangeForm):
+    password = forms.CharField(widget=forms.PasswordInput, required=False, help_text="Leave blank if you do not wish to change the password.")
+    class Meta:
+        model = User
+        fields = ["username", "email", "password"]
+    
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["profile_picture", "bio"]

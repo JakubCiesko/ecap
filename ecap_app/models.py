@@ -14,9 +14,8 @@ class Product(models.Model):
 
 class Expense(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-    #product = models.ForeignKey(Product, on_delete=models.CASCADE, default=1)
     date = models.DateField()
-    amount = models.DecimalField(max_digits=50, decimal_places=2) #amount = models.PositiveIntegerField()
+    amount = models.DecimalField(max_digits=50, decimal_places=2)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100)
     def __str__(self):
@@ -114,6 +113,7 @@ class Profile(models.Model):
         null=False,
         default="profile_pictures/default_user.jpg"
     )
+    bio = models.TextField()
     
     def __str__(self):
         return f"{self.user.username}'s profile"

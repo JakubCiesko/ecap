@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from sklearn.linear_model import LinearRegression
-from .models import Expense, Income, Report, SavingGoal, Friend
+from .models import Expense, Income, Report, SavingGoal, Friend, Profile
 from django.contrib.auth.models import User
-from django.db.models import Max, Min, Avg, Sum
+from django.db.models import Max, Min, Avg, Sum, Q
 from django.db.models.functions import TruncMonth
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from typing import List, Callable, Tuple
 
 
@@ -805,4 +806,54 @@ def get_index_context(request: HttpRequest) -> dict:
     """ 
     return {
         "active_menu": "dashboard"
+    }
+
+def get_profile_view_context(user_id) -> dict:
+    """
+    Retrieve the context for the user profile view.
+
+    This function gathers the necessary data to render a user profile page. It fetches the `User` object, 
+    the associated `Profile` object, and the list of accepted friends for the specified user. It constructs 
+    a context dictionary containing the user, their profile, and their friends.
+
+    Parameters:
+    - user_id (int): The ID of the user whose profile context is being retrieved.
+
+    Returns:
+    - dict: A dictionary containing:
+        - "user": The `User` object for the specified `user_id`.
+        - "profile": The `Profile` object associated with the `User`.
+        - "friends": A list of `User` objects representing the accepted friends of the user.
+    """
+    user = get_object_or_404(User, id=user_id)
+    profile = Profile.objects.get(user=user)
+    friend_relations = Friend.objects.filter((Q(user=user) | Q(friend=user)), status="accepted")
+    friends = [
+        friend_relation.friend if friend_relation.user == user else friend_relation.user
+        for friend_relation in friend_relations
+    ]
+    context = {
+        "user": user,
+        "profile": profile, 
+        "friends": friends
+    }
+    return context
+    
+
+def get_settings_view_context(request) -> dict:
+    """
+    Retrieve the context for the user settings view.
+
+    This function constructs a context dictionary for the settings page of the authenticated user. It includes 
+    the current user in the context to be used in the settings form.
+
+    Parameters:
+    - request (HttpRequest): The HTTP request object containing metadata about the request and the user.
+
+    Returns:
+    - dict: A dictionary containing:
+        - "user": The currently authenticated `User` object.
+    """
+    return {
+        "user": request.user
     }

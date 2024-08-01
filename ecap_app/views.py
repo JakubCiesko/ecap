@@ -1,6 +1,6 @@
 import json
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -10,13 +10,13 @@ from django.templatetags.static import static
 from datetime import datetime
 from .models import *
 from .utils import *
-from .forms import SignUpForm, ExpenseForm, IncomeForm, SavingGoalForm
+from .forms import SignUpForm, ExpenseForm, IncomeForm, SavingGoalForm, UserUpdateForm, ProfileUpdateForm
 #from transformers import pipeline
 
 
 print("Loading model")
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
-model = pipeline("text2text-generation", model=checkpoint)
+model = lambda x: x# pipeline("text2text-generation", model=checkpoint)
 print("Everything loaded, ask away!")
 
 def generate_response(prompt: str) -> str:
@@ -914,3 +914,60 @@ def modify_saving_goal(request, saving_goal_id):
     context = get_saving_goal_context(request)
     context["form"] = form
     return render(request, "saving_goal.html", context=context)
+
+
+@login_required
+def settings_view(request):
+    """
+    Handle the user settings view where users can update their profile information and change their password.
+
+    This view allows authenticated users to update their profile information (such as username and email)
+    and change their password. The form submission is handled with a POST request. If the form is valid and 
+    there are changes, it saves the updated user information and updates the session authentication hash if
+    a new password is provided.
+
+    Parameters:
+    - request (HttpRequest): The HTTP request object containing metadata about the request, such as method, data, and user information.
+
+    Returns:
+    - HttpResponseRedirect: Redirects to the "settings" URL upon successful form submission.
+    - HttpResponse: Renders the "settings.html" template with the context containing the user form for GET requests.
+    """
+    context = get_settings_view_context(request)
+    if request.method == "POST":
+        user_form = UserUpdateForm(request.POST, instance=context["user"])
+        if user_form.is_valid():
+            if user_form.has_changed():
+                    user_form.save()
+            if user_form.cleaned_data["password"]:
+                update_session_auth_hash(request, context["user"])
+        return redirect("settings")
+    else: 
+        user_form = UserUpdateForm(instance=context["user"])
+    context["user_form"] = user_form 
+    return render(request, "settings.html", context=context)
+
+@login_required 
+def profile_view(request, user_id):
+    """
+    Handle the user profile view where users can update their profile details.
+
+    This view allows users to update their own profile information, including their profile picture and bio.
+    The form submission is handled with a POST request. If the form is valid, it saves the updated profile information.
+
+    Parameters:
+    - request (HttpRequest): The HTTP request object containing metadata about the request, such as method, data, and user information.
+    - user_id (int): The ID of the user whose profile is being viewed or updated.
+
+    Returns:
+    - HttpResponse: Renders the "profile.html" template with the context containing the profile form for both GET and POST requests.
+    """
+    context = get_profile_view_context(user_id)
+    if request.method == "POST":
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=context["profile"])
+        if profile_form.is_valid():
+            profile_form.save()
+    else:
+        profile_form = ProfileUpdateForm(instance=context["profile"])
+    context["profile_form"] = profile_form
+    return render(request, "profile.html", context=context)
